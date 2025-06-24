@@ -2,9 +2,9 @@
 from pathlib import Path
 import pytest
 
-from haraka.post_gen.utils.assets import LANGUAGE_ASSETS, GLOBAL_ASSETS
-from haraka.post_gen.utils.purge import ResourcePurger
-from haraka.post_gen.utils.files import FileOps
+from haraka.post_gen.service.assets import LANGUAGE_ASSETS, GLOBAL_ASSETS
+from haraka.post_gen.service.purge import ResourcePurger
+from haraka.post_gen.service.files import FileOps
 from haraka.utils import Logger
 
 

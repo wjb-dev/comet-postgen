@@ -20,7 +20,6 @@ if __name__ == "__main__":
         author       = "{{ cookiecutter.author }}",
         description  = "{{ cookiecutter.description }}",
         project_dir  = Path.cwd(),
-        swagger      = False
     )
     
     main(cfg) 

@@ -1,0 +1,23 @@
+variant: python-fastapi
+
+keep:
+  # ── application source ─────────────────────────────
+  - src/app/**
+
+  # ── tests ──────────────────────────────────────────
+  - tests/**
+  - pytest.ini
+
+  # ── project scripts & metadata ─────────────────────
+  - Dockerfile
+  - Makefile
+  - requirements.txt
+  - README.md
+
+  # ── IDE / run configs ──────────────────────────────
+  - runConfigurations/Python/FastAPI.run.xml
+
+  # ── deployment & infra (shared) ────────────────────
+  - skaffold.yaml
+  - chart/**
+  - infra/**

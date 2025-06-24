@@ -4,10 +4,10 @@ from haraka.art.create import Create
 from haraka.art.ascii.assets import *
 from .config import PostGenConfig
 from haraka.utils import divider, Logger
-from haraka.post_gen.utils.command import CommandRunner
-from haraka.post_gen.utils.files import FileOps
-from haraka.post_gen.utils.purge import ResourcePurger
-from haraka.post_gen.utils.gitops import GitOps
+from haraka.post_gen.service.command import CommandRunner
+from haraka.post_gen.service.files import FileOps
+from haraka.post_gen.service.purge import ResourcePurger
+from haraka.post_gen.service.gitops import GitOps
 
 
 def main(cfg: PostGenConfig) -> None:
@@ -38,7 +38,7 @@ def main(cfg: PostGenConfig) -> None:
 
     divider("🎉 Project generation complete 🎉")
 
-    if cfg.language == "go" and not cfg.swagger:
+    if cfg.language == "go-grpc-protoc":
         go_emoji_logo = [emoji["go"]]
         go_performance_mode = [
             goLang, divider_xl, performance_mode, divider_l, tools, divider_s,

@@ -1,0 +1,26 @@
+variant: go-grpc-protoc
+
+keep:
+  # ── application source (Go) ─────────────────────────
+  - cmd/**                 # main binary entry-point
+  - internal/**            # config, handlers, server logic
+  - pkg/proto/**           # generated protobuf / proto defs
+  - configs/**             # runtime config files
+  - go.mod
+  - git.ignore
+
+  # ── tests ───────────────────────────────────────────
+  - test/**                # Go integration + unit tests
+
+  # ── build & project metadata ────────────────────────
+  - Makefile
+  - Dockerfile
+  - README.md
+
+  # ── IDE / run configs ───────────────────────────────
+  - runConfigurations/Go/**
+
+  # ── deployment & infra (shared) ─────────────────────
+  - skaffold.yaml
+  - chart/**
+  - infra/**
