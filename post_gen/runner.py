@@ -8,6 +8,7 @@ from .gitops            import GitOps
 from .gen_ascii         import gen
 
 def main(cfg: PostGenConfig) -> None:
+
     logger = init_logger(cfg.language)
     cmd = CommandRunner(logger)
     fops  = FileOps(logger)
