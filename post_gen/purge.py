@@ -1,13 +1,14 @@
 from pathlib import Path
 from .files import FileOps
 from .utils import divider
-from .utils import logger, label
+from .utils import Logger
 
 class ResourcePurger:
     """Delete template artefacts not relevant to the selected language."""
 
-    def __init__(self) -> None:
-        self._log = logger.Logger(label)
+    def __init__(self, fops: FileOps, logger: Logger) -> None:
+        self._f = fops
+        self._log = logger
 
     def purge(self, language: str, project_dir: Path) -> None:
         language = language.lower()

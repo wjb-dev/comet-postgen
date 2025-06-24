@@ -1,20 +1,18 @@
 from .utils.config      import PostGenConfig
 from .utils             import divider
-from .utils             import logger
+from .utils             import Logger, get_label
 from .command           import CommandRunner
 from .files             import FileOps
 from .purge             import ResourcePurger
 from .gitops            import GitOps
 from .gen_ascii         import gen
-from .utils.common.globals import label
 
 def main(cfg: PostGenConfig) -> None:
-    global label
-    cmd   = CommandRunner()
-    label = logger.get_label(cfg.language)
-    fops  = FileOps()
-    purge = ResourcePurger()
-    git   = GitOps(cmd)
+    logger = init_logger(cfg.language)
+    cmd = CommandRunner(logger)
+    fops  = FileOps(logger)
+    purge = ResourcePurger(fops, logger)
+    git   = GitOps(cmd, logger)
 
     divider("1️⃣/ 4️⃣–  Purge template junk")
     purge.purge(cfg.language, cfg.project_dir)
@@ -31,3 +29,7 @@ def main(cfg: PostGenConfig) -> None:
     divider("Project generation complete 🎉")
     if cfg.language == "go" and not cfg.swagger:
         gen.print_go_performance_mode_art()
+
+def init_logger(lang) -> Logger:
+    label = get_label(lang)
+    return Logger(label)

@@ -1,7 +1,6 @@
 import sys
 from typing import TextIO
 
-
 class Logger:
     def __init__(self, label: str):
         self.label = label

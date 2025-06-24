@@ -1,11 +1,11 @@
 import shutil
 from pathlib import Path
-from .utils import logger, label
+from .utils import Logger
 
 class FileOps:
     """Filesystem helpers: remove files/dirs, print tree, nice dividers."""
-    def __init__(self) -> None:
-        self.logger = logger.Logger(label)
+    def __init__(self, logger: Logger) -> None:
+        self.logger = logger
 
     # -------- removal -------------------------------------------------- #
     def remove_file(self, path: Path) -> None:

@@ -3,14 +3,14 @@ import sys
 from pathlib import Path
 from .command import CommandRunner
 import subprocess
-from .utils import logger, label
+from .utils import Logger
 
 class GitOps:
     """Git-related operations: init, commit, create remote, push."""
 
-    def __init__(self, runner: CommandRunner) -> None:
+    def __init__(self, runner: CommandRunner, logger: Logger) -> None:
         self._r = runner
-        self._log = logger.Logger(label)
+        self._log = logger
 
     # ------------- public API ----------------------------------------- #
     def init_repo(self, project_dir: Path) -> None:

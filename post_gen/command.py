@@ -1,14 +1,14 @@
 import subprocess, sys
 from pathlib import Path
 from typing import List, Optional
-from .utils import logger, label
+from .utils import Logger
 
 class CommandRunner:
     
     """Thin wrapper around subprocess.run with logging & graceful error-handling."""
 
-    def __init__(self) -> None:
-        self._log = logger.Logger(label)
+    def __init__(self, logger: Logger) -> None:
+        self._log = logger
 
     def run(
         self,
@@ -18,7 +18,7 @@ class CommandRunner:
         check: bool = True,
     ) -> Optional[subprocess.CompletedProcess]:
         cmd_str = " ".join(cmd)
-        self._log.info(f"{label} Running: {cmd_str}")
+        self._log.info(f"Running: {cmd_str}")
         try:
             result = subprocess.run(
                 cmd,
@@ -31,7 +31,7 @@ class CommandRunner:
             if result.stdout:
                 self._log.info(f"stdout:\n{result.stdout.strip()}")
             if result.stderr:
-                self._log.warning(f"{label} stderr:\n{result.stderr.strip()}", file=sys.stderr)
+                self._log.warn(f"stderr:\n{result.stderr.strip()}", file=sys.stderr)
             return result
         except subprocess.CalledProcessError as e:
             self._log.error(f"command failed: ({cmd_str})", file=sys.stderr)
