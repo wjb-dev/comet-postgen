@@ -39,7 +39,7 @@ def main(cfg: PostGenConfig) -> None:
     divider("🎉 Project generation complete 🎉")
 
     if cfg.language == "go" and not cfg.swagger:
-        go_emoji_logo = [emoji.go]
+        go_emoji_logo = [emoji["go"]]
         go_performance_mode = [
             goLang, divider_xl, performance_mode, divider_l, tools, divider_s,
             gRPC, divider_mono, protoC, divider_mono, autoMaxProcs, divider_mono,
