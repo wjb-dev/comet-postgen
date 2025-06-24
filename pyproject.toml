@@ -19,8 +19,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/wjb-dev/cookiecutter-postgen"
-Source   = "https://github.com/wjb-dev/cookiecutter-postgen"
+Homepage = "https://github.com/wjb-dev/comet-postgen"
+Source   = "https://github.com/wjb-dev/comet-postgen"
 
 [tool.setuptools.packages.find]
 where = ["comet_postgen"]
