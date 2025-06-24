@@ -1,9 +1,14 @@
 import subprocess, sys
 from pathlib import Path
 from typing import List, Optional
+from .utils import logger, label
 
 class CommandRunner:
+    
     """Thin wrapper around subprocess.run with logging & graceful error-handling."""
+
+    def __init__(self) -> None:
+        self._log = logger.Logger(label)
 
     def run(
         self,
@@ -11,10 +16,9 @@ class CommandRunner:
         *,
         cwd: Optional[Path] = None,
         check: bool = True,
-        label: str = "[post_gen]"
     ) -> Optional[subprocess.CompletedProcess]:
         cmd_str = " ".join(cmd)
-        print(f"{label} Running: {cmd_str}")
+        self._log.info(f"{label} Running: {cmd_str}")
         try:
             result = subprocess.run(
                 cmd,
@@ -25,21 +29,21 @@ class CommandRunner:
                 text=True,
             )
             if result.stdout:
-                print(f"{label} stdout:\n{result.stdout.strip()}")
+                self._log.info(f"stdout:\n{result.stdout.strip()}")
             if result.stderr:
-                print(f"{label} stderr:\n{result.stderr.strip()}", file=sys.stderr)
+                self._log.warning(f"{label} stderr:\n{result.stderr.strip()}", file=sys.stderr)
             return result
         except subprocess.CalledProcessError as e:
-            print(f"{label} ERROR: command failed ({cmd_str})", file=sys.stderr)
+            self._log.error(f"command failed: ({cmd_str})", file=sys.stderr)
             if e.stdout:
-                print(f"{label} stdout:\n{e.stdout.strip()}", file=sys.stderr)
+                self._log.error(f"stdout:\n{e.stdout.strip()}", file=sys.stderr)
             if e.stderr:
-                print(f"{label} stderr:\n{e.stderr.strip()}", file=sys.stderr)
+                self._log.error(f"stderr:\n{e.stderr.strip()}", file=sys.stderr)
             if check:
                 sys.exit(e.returncode)
             return None
         except FileNotFoundError:
-            print(f"{label} ERROR: command not found: {cmd[0]}", file=sys.stderr)
+            self._log.error(f"command not found: {cmd[0]}", file=sys.stderr)
             if check:
                 sys.exit(1)
             return None

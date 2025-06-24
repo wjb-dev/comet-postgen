@@ -1,11 +1,13 @@
 from pathlib import Path
 from .files import FileOps
+from .utils import divider
+from .utils import logger, label
 
 class ResourcePurger:
     """Delete template artefacts not relevant to the selected language."""
 
-    def __init__(self, fops: FileOps) -> None:
-        self._f = fops
+    def __init__(self) -> None:
+        self._log = logger.Logger(label)
 
     def purge(self, language: str, project_dir: Path) -> None:
         language = language.lower()
@@ -14,10 +16,10 @@ class ResourcePurger:
         elif language == "go":
             self._purge_go(project_dir)
         else:
-            self._f._warn(f"Unrecognised language '{language}'; skipping purge.")
+            self._log.warn(f"Unrecognised language '{language}'; skipping purge.")
             return
 
-        self._f.divider("Project tree after purge")
+        divider("Project tree after purge...")
         self._f.print_tree(project_dir)
 
     # ------------------------------------------------------------------ #

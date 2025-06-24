@@ -1,38 +1,33 @@
-from pathlib import Path
-from .config import PostGenConfig
-from .command import CommandRunner
-from .files   import FileOps
-from .purge   import ResourcePurger
-from .gitops  import GitOps
-from .generate_ascii import gen
+from .utils.config      import PostGenConfig
+from .utils             import divider
+from .utils             import logger
+from .command           import CommandRunner
+from .files             import FileOps
+from .purge             import ResourcePurger
+from .gitops            import GitOps
+from .gen_ascii         import gen
+from .utils.common.globals import label
 
-def main() -> None:
-    cfg = PostGenConfig(
-        language     = "go",
-        project_slug = "{{ cookiecutter.project_slug }}",
-        author       = "{{ cookiecutter.author }}",
-        description  = "{{ cookiecutter.description }}",
-        project_dir  = Path.cwd(),
-        swagger      = False
-    )
-
+def main(cfg: PostGenConfig) -> None:
+    global label
     cmd   = CommandRunner()
+    label = logger.get_label(cfg.language)
     fops  = FileOps()
-    purge = ResourcePurger(fops)
-    git   = GitOps(cmd, fops)
+    purge = ResourcePurger()
+    git   = GitOps(cmd)
 
-    fops.divider("Stage 1  –  Purge template junk")
+    divider("1️⃣/ 4️⃣–  Purge template junk")
     purge.purge(cfg.language, cfg.project_dir)
 
-    fops.divider("Stage 2  –  Initialise Git repo")
+    divider("2️⃣/ 4️⃣–  Initialise Git repo")
     git.init_repo(cfg.project_dir)
 
-    fops.divider("Stage 3  –  Commit scaffold")
+    divider("3️⃣/ 4️⃣–  Commit scaffold")
     git.stage_commit(cfg.project_dir)
 
-    fops.divider("Stage 4  –  Create GitHub repo & push")
+    divider("4️⃣/ 4️⃣–  Create GitHub repo & push")
     git.push_to_github(cfg.project_dir, cfg.author, cfg.project_slug, cfg.description)
 
-    fops.divider("Project generation complete 🎉")
+    divider("Project generation complete 🎉")
     if cfg.language == "go" and not cfg.swagger:
         gen.print_go_performance_mode_art()
