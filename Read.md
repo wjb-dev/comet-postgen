@@ -8,8 +8,22 @@ Shared **post-generation logic** used by multiple Cookiecutter templates
 ```
 Inside a Cookiecutter hook:
 ```python
-from post_gen import main
-main()
+from post_gen import main, PostGenConfig
+from pathlib import Path
+
+
+if __name__ == "__main__":
+    
+    cfg = PostGenConfig(
+        language     = "{{ cookiecutter.language }}",
+        project_slug = "{{ cookiecutter.project_slug }}",
+        author       = "{{ cookiecutter.author }}",
+        description  = "{{ cookiecutter.description }}",
+        project_dir  = Path.cwd(),
+        swagger      = False
+    )
+    
+    main(cfg) 
 ```
 MIT-licensed.
 

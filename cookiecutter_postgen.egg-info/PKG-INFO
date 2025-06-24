@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: cookiecutter-postgen
+Version: 0.2.1
+Summary: Reusable post-generation helper for Cookiecutter micro-service templates
+Author-email: Will Burks <will@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/wjb-dev/cookiecutter-postgen
+Project-URL: Source, https://github.com/wjb-dev/cookiecutter-postgen
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
