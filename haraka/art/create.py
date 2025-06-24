@@ -1,4 +1,4 @@
-from comet.art import TextFramer
+from haraka.art import TextFramer
 
 class Create:
     @staticmethod

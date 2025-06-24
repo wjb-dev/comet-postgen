@@ -1,10 +1,10 @@
-# comet/post_gen/utils/purge.py
+# haraka/post_gen/utils/purge.py
 from pathlib import Path
 from typing import Dict, Set
 
 from .files import FileOps
-from comet.utils import Logger, divider
-from comet.post_gen.utils.assets import LANGUAGE_ASSETS, GLOBAL_ASSETS
+from haraka.utils import Logger, divider
+from haraka.post_gen.utils.assets import LANGUAGE_ASSETS, GLOBAL_ASSETS
 
 
 class ResourcePurger:

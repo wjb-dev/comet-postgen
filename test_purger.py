@@ -2,10 +2,10 @@
 from pathlib import Path
 import pytest
 
-from comet.post_gen.utils.assets import LANGUAGE_ASSETS, GLOBAL_ASSETS
-from comet.post_gen.utils.purge import ResourcePurger
-from comet.post_gen.utils.files import FileOps
-from comet.utils import Logger
+from haraka.post_gen.utils.assets import LANGUAGE_ASSETS, GLOBAL_ASSETS
+from haraka.post_gen.utils.purge import ResourcePurger
+from haraka.post_gen.utils.files import FileOps
+from haraka.utils import Logger
 
 
 # ------------------------------------------------------------------ #

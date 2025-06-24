@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from comet.utils import Logger
+from haraka.utils import Logger
 
 class FileOps:
     """Filesystem helpers: remove files/dirs, print tree, nice dividers."""

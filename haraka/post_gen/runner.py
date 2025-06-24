@@ -1,13 +1,13 @@
 from post_gen.gen_ascii.ascii_art import goLang
 
-from comet.art.create import Create
-from comet.art.ascii.assets import *
+from haraka.art.create import Create
+from haraka.art.ascii.assets import *
 from .config import PostGenConfig
-from comet.utils import divider, Logger
-from comet.post_gen.utils.command import CommandRunner
-from comet.post_gen.utils.files import FileOps
-from comet.post_gen.utils.purge import ResourcePurger
-from comet.post_gen.utils.gitops import GitOps
+from haraka.utils import divider, Logger
+from haraka.post_gen.utils.command import CommandRunner
+from haraka.post_gen.utils.files import FileOps
+from haraka.post_gen.utils.purge import ResourcePurger
+from haraka.post_gen.utils.gitops import GitOps
 
 
 def main(cfg: PostGenConfig) -> None:

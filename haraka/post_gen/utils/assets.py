@@ -1,5 +1,5 @@
 # assets.py  ← drop this next to utils/, purge.py, etc.
-from comet.art.ascii.assets import *
+from haraka.art.ascii.assets import *
 
 LANGUAGE_ASSETS = [
     {

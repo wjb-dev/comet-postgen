@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from .command import CommandRunner
 import subprocess
-from comet.utils import Logger
+from haraka.utils import Logger
 
 class GitOps:
     """Git-related operations: init, commit, create remote, push."""

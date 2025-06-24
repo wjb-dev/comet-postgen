@@ -1,7 +1,7 @@
 import subprocess, sys
 from pathlib import Path
 from typing import List, Optional
-from comet.utils import Logger
+from haraka.utils import Logger
 
 class CommandRunner:
     
