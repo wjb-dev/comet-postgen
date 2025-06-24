@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "comet-postgen"
-version         = "0.2.1"
+version         = "0.2.3"
 description     = "Reusable post-generation helper for Cookiecutter micro-service templates"
 readme          = "README.md"
 license         = {text = "MIT"}
