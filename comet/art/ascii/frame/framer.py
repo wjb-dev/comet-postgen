@@ -33,6 +33,8 @@ class TextFramer:
         align: str = "center",
         border_fraction: float = 0.80,
         center_border: bool = True,
+        flex: bool = False,
+        art: str = ""
     ):
         self.border_x = border_char_x
         self.border_y = border_char_y
@@ -40,6 +42,7 @@ class TextFramer:
         self.align = align.lower()
         self.border_fraction = border_fraction
         self.center_border = center_border
+        self.flex = flex
 
     # ---- public façade ----------------------------------------------- #
 
@@ -56,7 +59,10 @@ class TextFramer:
         top_border = bb.build()
         bottom_border = top_border      # symmetrical
         target_width = bb.width
-        margin = (self.term_width - target_width) // 2 if self.center_border else 0
+        if self.flex:
+            margin = (self.term_width - target_width) // 2 if self.center_border else 0
+        else :
+            margin = (110 - target_width) // 2 if self.center_border else 0
 
         # 2️⃣  compute interior geometry
         side = self.border_y or ""
@@ -114,3 +120,6 @@ class TextFramer:
             body = f"{side}{body[side_w : side_w + interior_allowed]}{side}"
 
         return " " * margin + body if margin else body
+
+    def generate(self, texts: List[str]):
+        return print(self.frame(texts))

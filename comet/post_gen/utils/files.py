@@ -1,31 +1,37 @@
 import shutil
 from pathlib import Path
-from .utils import Logger
+from comet.utils import Logger
 
 class FileOps:
     """Filesystem helpers: remove files/dirs, print tree, nice dividers."""
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: Logger = Logger("⚙️️️️️️️️️️️️Testing⚙️"), test_mode=False) -> None:
         self.logger = logger
+        self.test_mode = test_mode
 
-    # -------- removal -------------------------------------------------- #
+    def _relpath(self, path: Path) -> str:
+        try:
+            return str(path.relative_to(Path.cwd()))
+        except ValueError:
+            return str(path) if self.test_mode else f"<non-project-path>: {path}"
+
     def remove_file(self, path: Path) -> None:
         try:
             if path.is_file():
                 path.unlink()
-                self.logger.info(f"Removed file: {path.relative_to(Path.cwd())}")
+                self.logger.info(f"Removed file: {self._relpath(path)}")
             elif path.is_dir():
                 shutil.rmtree(path, ignore_errors=True)
-                self.logger.info(f"Removed directory (expected file): {path.relative_to(Path.cwd())}")
+                self.logger.info(f"Removed directory (expected file): {self._relpath(path)}")
         except Exception as e:
-            self.logger.warn(f"Could not remove {path}: {e}")
+            self.logger.warn(f"Could not remove {self._relpath(path)}: {e}")
 
     def remove_dir(self, path: Path) -> None:
         if path.exists():
             try:
                 shutil.rmtree(path, ignore_errors=True)
-                self.logger.info(f"Removed directory: {path.relative_to(Path.cwd())}")
+                self.logger.info(f"Removed directory: {self._relpath(path)}")
             except Exception as e:
-                self.logger.warn(f"Could not remove directory {path}: {e}")
+                self.logger.warn(f"Could not remove directory {self._relpath(path)}: {e}")
 
     def print_tree(self, path: Path, prefix: str = "") -> None:
         if not path.exists():

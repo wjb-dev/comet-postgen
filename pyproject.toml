@@ -3,8 +3,8 @@ requires      = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name            = "comet-postgen"
-version         = "0.2.4"
+name            = "comet"
+version         = "0.2.5"
 description     = "Reusable post-generation helper for Cookiecutter micro-service templates"
 readme          = "README.md"
 license         = {text = "MIT"}
