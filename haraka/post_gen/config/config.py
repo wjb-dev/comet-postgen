@@ -13,6 +13,7 @@ class PostGenConfig:
     author: str
     description: str
     project_dir: Path
+    create_repo: bool
 
 
 def load_manifest(variant: str) -> list[str]:
