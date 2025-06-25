@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "haraka"
-version         = "0.2.13"
+version         = "0.2.14"
 description     = "Reusable post-generation helper for Cookiecutter micro-service templates"
 readme          = "README.md"
 license         = {text = "MIT"}
@@ -24,3 +24,10 @@ Source   = "https://github.com/wjb-dev/comet-postgen"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"haraka.utils.manifests" = ["*.yml"]
+
+[tool.setuptools]
+include-package-data = true
+
