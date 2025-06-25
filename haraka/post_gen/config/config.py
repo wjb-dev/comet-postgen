@@ -14,6 +14,7 @@ class PostGenConfig:
     description: str
     project_dir: Path
     create_repo: bool
+    verbose: bool = False
 
 
 def load_manifest(variant: str) -> list[str]:

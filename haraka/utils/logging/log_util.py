@@ -4,15 +4,20 @@ from typing import TextIO
 
 
 class Logger:
-    def __init__(self, label: str = ""):
+    def __init__(self, label: str = "", verbose: bool = False) -> None:
         self.label = label
+        self.verbose = verbose
 
-    def start_logger(self) -> Logger:
+    def start_logger(self, verbose) -> Logger:
         label = Logger.get_label(self.label)
-        return Logger(label)
+        return Logger(label, verbose)
 
     def info(self, msg: str) -> None:
         print(f"{self.label} INFO: {msg}")
+
+    def debug(self, msg: str) -> None:
+        if self.verbose:
+            print(f"🔴  DEBUG: {msg}")
 
     def warn(self, msg: str, file: TextIO = sys.stderr) -> None:
         print(f"{self.label} WARNING: {msg}", file=file)

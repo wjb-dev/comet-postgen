@@ -2,15 +2,15 @@ variant: go-grpc-protoc
 
 keep:
   # ── application source (Go) ─────────────────────────
-  - cmd/**                 # main binary entry-point
-  - internal/**            # config, handlers, server logic
-  - pkg/proto/**           # generated protobuf / proto defs
-  - configs/**             # runtime config files
+  - cmd/**
+  - internal/**
+  - pkg/proto/**
+  - configs/**
   - go.mod
   - git.ignore
 
   # ── tests ───────────────────────────────────────────
-  - test/**                # Go integration + unit tests
+  - test/**
 
   # ── build & project metadata ────────────────────────
   - Makefile

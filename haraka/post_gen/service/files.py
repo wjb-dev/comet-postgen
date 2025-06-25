@@ -15,31 +15,49 @@ class FileOps:
             return str(path) if self.test_mode else f"<non-project-path>: {path}"
 
     def remove_file(self, path: Path) -> None:
+        self.logger.debug(f"Attempting to remove file: {self._relpath(path)}")
         try:
             if path.is_file():
+                self.logger.debug(f"Confirmed {self._relpath(path)} is a file")
+
                 path.unlink()
+                self.logger.debug(f"File {self._relpath(path)} successfully unlinked")
                 self.logger.info(f"Removed file: {self._relpath(path)}")
             elif path.is_dir():
+                self.logger.debug(f"{self._relpath(path)} is a directory, not a file. Proceeding to remove it as a directory")
+
                 shutil.rmtree(path, ignore_errors=True)
+                self.logger.debug(f"Directory {self._relpath(path)} removed when file was expected")
                 self.logger.info(f"Removed directory (expected file): {self._relpath(path)}")
         except Exception as e:
+            self.logger.error(f"Error occurred while attempting to remove file {self._relpath(path)}: {e}")
             self.logger.warn(f"Could not remove {self._relpath(path)}: {e}")
 
     def remove_dir(self, path: Path) -> None:
+        self.logger.debug(f"Attempting to remove directory: {self._relpath(path)}")
+
         if path.exists():
+            self.logger.debug(f"Confirmed {self._relpath(path)} exists")
             try:
                 shutil.rmtree(path, ignore_errors=True)
+                self.logger.debug(f"Directory {self._relpath(path)} successfully removed")
                 self.logger.info(f"Removed directory: {self._relpath(path)}")
             except Exception as e:
+                self.logger.error(f"Error occurred while attempting to remove directory {self._relpath(path)}: {e}")
                 self.logger.warn(f"Could not remove directory {self._relpath(path)}: {e}")
 
     def print_tree(self, path: Path, prefix: str = "") -> None:
+        self.logger.debug(f"Printing directory tree starting at: {self._relpath(path)}")
+
         if not path.exists():
+            self.logger.debug(f"Path {self._relpath(path)} does not exist")
             self.logger.warn(f"Path does not exist: {path}")
             return
         entries = sorted(path.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
+        self.logger.debug(f"Found {len(entries)} entries in directory {self._relpath(path)}")
         for i, entry in enumerate(entries):
             branch = "└── " if i == len(entries) - 1 else "├── "
+            self.logger.debug(f"Processing entry: {entry.name} ({'directory' if entry.is_dir() else 'file'})")
             print(prefix + branch + entry.name)
             if entry.is_dir():
                 ext = "    " if i == len(entries) - 1 else "│   "
