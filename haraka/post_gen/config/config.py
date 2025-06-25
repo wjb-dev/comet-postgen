@@ -4,7 +4,7 @@ from typing import Iterable
 import yaml
 from pathspec import PathSpec
 
-_MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "manifests"
+_MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "utils" / "manifests"
 
 @dataclass(frozen=True, slots=True)
 class PostGenConfig:
