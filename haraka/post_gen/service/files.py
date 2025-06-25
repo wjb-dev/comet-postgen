@@ -57,7 +57,6 @@ class FileOps:
         self.logger.debug(f"Found {len(entries)} entries in directory {self._relpath(path)}")
         for i, entry in enumerate(entries):
             branch = "└── " if i == len(entries) - 1 else "├── "
-            self.logger.debug(f"Processing entry: {entry.name} ({'directory' if entry.is_dir() else 'file'})")
             print(prefix + branch + entry.name)
             if entry.is_dir():
                 ext = "    " if i == len(entries) - 1 else "│   "
