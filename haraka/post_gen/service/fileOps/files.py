@@ -47,14 +47,12 @@ class FileOps:
                 self.logger.warn(f"Could not remove directory {self._relpath(path)}: {e}")
 
     def print_tree(self, path: Path, prefix: str = "") -> None:
-        self.logger.debug(f"Printing directory tree starting at: {self._relpath(path)}")
 
         if not path.exists():
             self.logger.debug(f"Path {self._relpath(path)} does not exist")
             self.logger.warn(f"Path does not exist: {path}")
             return
         entries = sorted(path.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
-        self.logger.debug(f"Found {len(entries)} entries in directory {self._relpath(path)}")
         for i, entry in enumerate(entries):
             branch = "└── " if i == len(entries) - 1 else "├── "
             print(prefix + branch + entry.name)

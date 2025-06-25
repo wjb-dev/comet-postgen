@@ -1,7 +1,7 @@
 import shutil
 import sys
 from pathlib import Path
-from .command import CommandRunner
+from haraka.post_gen.service.command import CommandRunner
 import subprocess
 from haraka.utils import Logger
 

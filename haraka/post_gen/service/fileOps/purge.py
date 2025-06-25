@@ -21,14 +21,12 @@ Requires:  pip install pathspec PyYAML
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable
 
-import yaml
 from pathspec import PathSpec
 
-from .files import FileOps
+from haraka.post_gen.service.fileOps.files import FileOps
 from haraka.utils import Logger, divider
-from ..config import config
+from haraka.post_gen.config import config
 
 _MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "manifests"
 
