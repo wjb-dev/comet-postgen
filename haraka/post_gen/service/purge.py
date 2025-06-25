@@ -89,7 +89,11 @@ class ResourcePurger:
 
             if spec.match_file(rel):
                 self._log.debug(f"Path matches keep patterns: {rel}")
-                self._log.debug(f"Keeping: {rel}")
+                self._log.debug(f"Keeping file: {rel}")
+                continue
+            elif path.is_dir() and spec.match_file(f"{rel}/"):
+                self._log.debug(f"Path matches keep patterns: {rel}")
+                self._log.debug(f"Keeping directory: {rel}")
                 continue
 
             if path.is_dir():
