@@ -2,10 +2,13 @@ variant: java-springboot
 
 keep:
   # ── application source ────────────────────────────
+  - src/main/java/
   - src/main/java/**
+  - src/main/resources/
   - src/main/resources/**
 
   # ── tests ─────────────────────────────────────────
+  - src/test/java/
   - src/test/java/**
 
   # ── build & project metadata ──────────────────────
@@ -15,9 +18,12 @@ keep:
   - README.md
 
   # ── IDE / run configs ─────────────────────────────
+  - runConfigurations/SpringBoot/
   - runConfigurations/SpringBoot/**
 
   # ── deployment & infra (shared) ───────────────────
   - skaffold.yaml
+  - chart/
   - chart/**
+  - infra/
   - infra/**

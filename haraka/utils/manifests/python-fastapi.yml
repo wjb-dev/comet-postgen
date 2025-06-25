@@ -2,9 +2,11 @@ variant: python-fastapi
 
 keep:
   # ── application source ─────────────────────────────
+  - src/app/
   - src/app/**
 
   # ── tests ──────────────────────────────────────────
+  - tests/
   - tests/**
   - pytest.ini
 
@@ -19,5 +21,7 @@ keep:
 
   # ── deployment & infra (shared) ────────────────────
   - skaffold.yaml
+  - chart/
   - chart/**
+  - infra/
   - infra/**
