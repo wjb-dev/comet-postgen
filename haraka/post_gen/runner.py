@@ -12,7 +12,7 @@ from haraka.post_gen.service.gitops import GitOps
 
 def main(cfg: PostGenConfig) -> None:
 
-    _logger = Logger(cfg.language)
+    _logger = Logger(cfg.variant)
     logger = _logger.start_logger()
 
     try:
@@ -25,7 +25,7 @@ def main(cfg: PostGenConfig) -> None:
         raise
 
     divider("1️⃣  / 4️⃣  – Purge template junk")
-    purge.purge(cfg.language, cfg.project_dir)
+    purge.purge(cfg.variant, cfg.project_dir)
     logger.info("Skipping git repo creation (steps 2-4)...")
 
     if cfg.create_repo:
@@ -41,7 +41,7 @@ def main(cfg: PostGenConfig) -> None:
 
     divider("🎉 Project generation complete 🎉")
 
-    if cfg.language == "go-grpc-protoc":
+    if cfg.variant == "go-grpc-protoc":
         go_emoji_logo = [emoji["go"]]
         go_performance_mode = [
             goLang, divider_xl, performance_mode, divider_l, tools, divider_s,

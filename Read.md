@@ -15,7 +15,7 @@ from pathlib import Path
 if __name__ == "__main__":
     
     cfg = PostGenConfig(
-        language     = "{{ cookiecutter.language }}",
+        variant      = "{{ cookiecutter.variant }}",
         project_slug = "{{ cookiecutter.project_slug }}",
         author       = "{{ cookiecutter.author }}",
         description  = "{{ cookiecutter.description }}",

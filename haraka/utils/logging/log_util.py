@@ -21,8 +21,8 @@ class Logger:
         print(f"{self.label} ERROR: {msg}", file=file)
 
     @staticmethod
-    def get_label(language: str) -> str:
-        if language == "go":
+    def get_label(variant: str) -> str:
+        if variant == "go":
             return f"[🔥Go Fast: post_gen]"
-        return f"[🔥post_gen ({language})]"
+        return f"[🔥post_gen ({variant})]"
 

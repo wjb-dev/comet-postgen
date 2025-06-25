@@ -8,7 +8,7 @@ _MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "manifests"
 
 @dataclass(frozen=True, slots=True)
 class PostGenConfig:
-    language: str
+    variant: str
     project_slug: str
     author: str
     description: str
