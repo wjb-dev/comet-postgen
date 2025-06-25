@@ -6,8 +6,8 @@ keep:
   - cmd/**
   - internal/
   - internal/**
-  - pkg/proto/
-  - pkg/proto/**
+  - pkg/
+  - pkg/**
   - configs/
   - configs/**
   - go.mod
