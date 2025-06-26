@@ -30,4 +30,3 @@ keep:
 
 protected:
   - src
-  - src/main

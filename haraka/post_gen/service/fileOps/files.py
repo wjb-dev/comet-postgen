@@ -21,8 +21,8 @@ class FileOps:
                 self.logger.debug(f"Confirmed {self._relpath(path)} is a file")
 
                 path.unlink()
-                self.logger.debug(f"File {self._relpath(path)} successfully unlinked")
-                self.logger.info(f"Removed file: {self._relpath(path)}")
+                self.logger.debug(f"  🗑️  File {self._relpath(path)} successfully unlinked")
+                self.logger.info(f"  🗑️  DELETED FILE: {self._relpath(path)}")
             elif path.is_dir():
                 self.logger.debug(f"{self._relpath(path)} is a directory, not a file. Proceeding to remove it as a directory")
 
@@ -40,8 +40,8 @@ class FileOps:
             self.logger.debug(f"Confirmed {self._relpath(path)} exists")
             try:
                 shutil.rmtree(path, ignore_errors=True)
-                self.logger.debug(f"Directory {self._relpath(path)} successfully removed")
-                self.logger.info(f"Removed directory: {self._relpath(path)}")
+                self.logger.debug(f"  🗑️  Directory {self._relpath(path)} successfully removed")
+                self.logger.info(f"  🗑️  DELETED DIR: {self._relpath(path)}")
             except Exception as e:
                 self.logger.error(f"Error occurred while attempting to remove directory {self._relpath(path)}: {e}")
                 self.logger.warn(f"Could not remove directory {self._relpath(path)}: {e}")

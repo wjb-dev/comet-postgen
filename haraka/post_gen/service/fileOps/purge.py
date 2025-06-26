@@ -155,7 +155,8 @@ class ResourcePurger:
                 if not protected_spec.match_file(p):
                     full_path = root / Path(p)
                     self._f.remove_dir(full_path)
-                    self._log.debug(f"  🗑️  DELETED DIR {p}")
+                else:
+                    self._log.debug(f"  🛡️  PROTECTED DIRECTORY  DIR {p}")
         else:
             self._log.info("  (none)")
         self._log.info("-" * 70)
@@ -166,7 +167,6 @@ class ResourcePurger:
                 for p in sorted(items):
                     full_path = root / Path(p)
                     self._f.remove_file(full_path)
-                    self._log.debug(f"  🗑️  DELETED DIR {p}")
             else:
                 self._log.info("  (none)")
             self._log.info("-" * 70)
