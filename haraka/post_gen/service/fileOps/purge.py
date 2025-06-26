@@ -92,7 +92,7 @@ class ResourcePurger:
         for p in all_paths:
             # log relative paths so they match what spec.match_file() sees
             rel = p.relative_to(root)
-            self._log.debug("    {rel}")
+            print(f"\"{rel}\", ", end="")
 
         for path in root.rglob("*"):
             self._log.debug(f"\nScanning path: {path}")
