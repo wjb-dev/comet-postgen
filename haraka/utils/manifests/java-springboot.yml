@@ -32,3 +32,4 @@ protected:
   - src
   - src/main
   - src/test
+  - runConfigurations

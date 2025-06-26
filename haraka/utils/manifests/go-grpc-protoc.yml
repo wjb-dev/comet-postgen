@@ -32,3 +32,7 @@ keep:
   - chart/**
   - infra/
   - infra/**
+
+protected:
+  - runConfigurations
+  - test
