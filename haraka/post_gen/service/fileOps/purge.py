@@ -148,15 +148,15 @@ class ResourcePurger:
             self._log.info("  (none)")
         self._log.info("-" * 70)
 
-    def _dir_batch_delete(self, title: str, items: List[str], root: Path, protected_spec: PathSpec) -> None:
+    def _dir_batch_delete(self, title: str, items: List[str], root: Path, protected_spec: PathSpec, keep_spec: PathSpec) -> None:
         self._log.info(f"{title} — {len(items)}")
         if items:
             for p in sorted(items):
-                if not protected_spec.match_file(p):
+                if protected_spec.match_file(p) and keep_spec.match_file(p):
+                    self._log.debug(f"  🛡️  PROTECTED DIRECTORY  DIR {p}")
+                else:
                     full_path = root / Path(p)
                     self._f.remove_dir(full_path)
-                else:
-                    self._log.debug(f"  🛡️  PROTECTED DIRECTORY  DIR {p}")
         else:
             self._log.info("  (none)")
         self._log.info("-" * 70)
