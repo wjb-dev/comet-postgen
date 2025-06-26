@@ -141,7 +141,7 @@ class ResourcePurger:
         self._log.info(f"{title} — {len(items)}")
         if items:
             for p in sorted(items):
-                self._log.info("  • %s", p)
+                self._log.info(f"  • {p}")
         else:
             self._log.info("  (none)")
         self._log.info("-" * 70)
