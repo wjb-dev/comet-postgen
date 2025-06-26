@@ -95,7 +95,7 @@ class ResourcePurger:
         else:
             self._log.debug(f"Found {len(all_paths)} paths under {root})")
 
-        matches, non_matches = [], []
+        matches, non_matches, directories_skipped = [], [], []
         for path in all_paths:
             self._log.debug(f"\nScanning path: {path}")
             rel = path.relative_to(root).as_posix()
@@ -109,11 +109,11 @@ class ResourcePurger:
 
             # Non-matching paths: collect and delete
             self._log.debug(f"❌ DELETE: Path does not match keep patterns: {rel}")
-            non_matches.append(path)
             if path.is_dir():
-                self._f.remove_dir(path)
-                self._log.debug(f"Deleted directory: {path}")
+                directories_skipped.append(path)
+                self._log.debug(f"⏭️ SKIPPING DELETE: Path is a directory: {path}")
             else:
+                non_matches.append(path)
                 self._f.remove_file(path)
                 self._log.debug(f"Deleted file: {path}")
 
