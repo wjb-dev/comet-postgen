@@ -85,14 +85,8 @@ class ResourcePurger:
             rel = path.relative_to(root).as_posix()
             self._log.debug(f"Relative path for inspection: {rel}")
 
-            # Match directory paths explicitly with trailing slash
-            if path.is_dir() and spec.match_file(f"{rel}/"):
-                self._log.debug(f"Path matches keep patterns: {rel}/")
-                self._log.debug(f"Keeping directory: {rel}")
-                continue
-
             # Regular file matching
-            if spec.match_file(rel):
+            if spec.match_file(path):
                 self._log.debug(f"Path matches keep patterns: {rel}")
                 self._log.debug(f"Keeping file: {rel}")
                 continue
