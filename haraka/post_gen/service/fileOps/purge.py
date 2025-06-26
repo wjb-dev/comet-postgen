@@ -88,11 +88,11 @@ class ResourcePurger:
 
         # Walk the project tree to inspect all paths
         all_paths = list(root.rglob("*"))
-        self._log.debug("📋 All paths under %s (total %d):", root, len(all_paths))
+        self._log.debug(f"📋 All paths under {root} (total {len(all_paths)}):")
         for p in all_paths:
             # log relative paths so they match what spec.match_file() sees
             rel = p.relative_to(root)
-            self._log.debug("    %s", rel)
+            self._log.debug("    {rel}")
 
         for path in root.rglob("*"):
             self._log.debug(f"\nScanning path: {path}")
