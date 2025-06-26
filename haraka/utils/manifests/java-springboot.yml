@@ -2,12 +2,15 @@ variant: java-springboot
 
 keep:
   # ── application source ────────────────────────────
+  - src/
+  - src/main/
   - src/main/java/
   - src/main/java/**
   - src/main/resources/
   - src/main/resources/**
 
   # ── tests ─────────────────────────────────────────
+  - src/test/
   - src/test/java/
   - src/test/java/**
 
@@ -18,6 +21,7 @@ keep:
   - README.md
 
   # ── IDE / run configs ─────────────────────────────
+  - runConfigurations/
   - runConfigurations/SpringBoot/
   - runConfigurations/SpringBoot/**
 

@@ -95,27 +95,36 @@ class ResourcePurger:
         else:
             self._log.debug(f"Found {len(all_paths)} paths under {root})")
 
-        matches, non_matches, directories_skipped = [], [], []
+        matches, non_matched_files, directories_skipped, non_matched_dirs = [], [], [], []
         for path in all_paths:
             self._log.debug(f"\nScanning path: {path}")
             rel = path.relative_to(root).as_posix()
             self._log.debug(f"Relative path for inspection: {rel}")
-
             # Match file against the PathSpec
             if spec.match_file(rel):
                 self._log.debug(f"✅ KEEP: Path matches keep patterns: {rel}")
                 matches.append(path)  # Collect paths to keep
-                continue
+            else:
+                if path.is_dir():
+                    if self._is_dir_protected(rel, spec):
+                        self._log.debug(f"{"⏭️ SKIPPING DELETE: Protected ancestor found: %s", path}")
+                        directories_skipped.append(rel)
+                    else:
+                        self._log.debug(f"{"❌ DELETE DIR: %s", rel}")
+                        non_matched_dirs.append(rel)
+                else:
+                    non_matched_files.append(rel)
+                    self._f.remove_file(path)
+                    self._log.debug(f"{"❌ DELETE FILE: %s", rel}")
+
+
 
             # Non-matching paths: collect and delete
             self._log.debug(f"❌ DELETE: Path does not match keep patterns: {rel}")
+
             if path.is_dir():
                 directories_skipped.append(path)
                 self._log.debug(f"⏭️ SKIPPING DELETE: Path is a directory: {path}")
-            else:
-                non_matches.append(path)
-                self._f.remove_file(path)
-                self._log.debug(f"Deleted file: {path}")
 
         # Print results cleanly for debugging/logging purposes
         self._log.info("\nMATCHED PATHS:")
@@ -125,6 +134,15 @@ class ResourcePurger:
 
         self._log.info("\nNOT MATCHED PATHS:")
         self._log.info("=" * 80)
-        for non_match in non_matches:
+        for non_match in non_matched_files:
             self._log.info(f"❌ {non_match}")
 
+    @staticmethod
+    def _is_dir_protected(relative_path: str, spec: PathSpec) -> bool:
+        """
+        Walks from `path` up to `root`, and returns True if any ancestor
+        is matched by the spec.
+        """
+        if spec.match_file(relative_path):
+            return True
+        return False
