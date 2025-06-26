@@ -87,6 +87,13 @@ class ResourcePurger:
         non_matches = []
 
         # Walk the project tree to inspect all paths
+        all_paths = list(root.rglob("*"))
+        self._log.debug("📋 All paths under %s (total %d):", root, len(all_paths))
+        for p in all_paths:
+            # log relative paths so they match what spec.match_file() sees
+            rel = p.relative_to(root)
+            self._log.debug("    %s", rel)
+
         for path in root.rglob("*"):
             self._log.debug(f"\nScanning path: {path}")
             rel = path.relative_to(root).as_posix()
