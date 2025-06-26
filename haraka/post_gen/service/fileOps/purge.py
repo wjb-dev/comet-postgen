@@ -83,7 +83,7 @@ class ResourcePurger:
 
         matched, non_dirs, non_files, _ = self.classify_paths(all_paths, project_dir, spec)
 
-        self._purge_unrelated(project_dir, matched, non_dirs, non_files, protected_spec)
+        self._purge_unrelated(project_dir, matched, non_dirs, non_files, protected_spec, spec)
 
         self._log.debug(f"Finished purging unrelated paths in project directory: {project_dir}")
 
@@ -178,11 +178,12 @@ class ResourcePurger:
             non_matched_dirs: List[str],
             non_matched_files: List[str],
             protected_spec: PathSpec,
+            keep_spec: PathSpec,
     ) -> None:
         """Human-friendly digest of keep/delete results."""
         self._log.info("\n" + "=" * 70)
         self._print_matches("✅ MATCHED (keep)", matched)
-        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root, protected_spec)
+        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root, protected_spec, keep_spec)
         self._file_batch_delete("📄 NON-MATCHED FILES (delete)", non_matched_files, root)
         self._log.info("=" * 70)
 
