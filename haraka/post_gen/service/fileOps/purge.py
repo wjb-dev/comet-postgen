@@ -81,7 +81,7 @@ class ResourcePurger:
 
         matched, non_dirs, non_files, _ = self.classify_paths(all_paths, project_dir, spec)
 
-        self.print_summary(matched, non_dirs, non_files)
+        self._purge_unrelated(project_dir, matched, non_dirs, non_files)
 
         self._log.debug(f"Finished purging unrelated paths in project directory: {project_dir}")
 
@@ -137,26 +137,49 @@ class ResourcePurger:
     # --------------------------------------------------------------------------- #
     # Summary printing helpers                                                    #
     # --------------------------------------------------------------------------- #
-    def _print_section(self, title: str, items: List[str]) -> None:
+    def _print_matches(self, title: str, items: List[str]) -> None:
         self._log.info(f"{title} — {len(items)}")
         if items:
             for p in sorted(items):
-                self._log.info(f"  • {p}")
+                self._log.info("  • %s", p)
         else:
             self._log.info("  (none)")
         self._log.info("-" * 70)
 
-    def print_summary(
+    def _dir_batch_delete(self, title: str, items: List[str], root: Path) -> None:
+        self._log.info(f"{title} — {len(items)}")
+        if items:
+            for p in sorted(items):
+                full_path = root / Path(p)
+                self._f.remove_dir(full_path)
+                self._log.debug(f"  🗑️  DELETED DIR {p}")
+        else:
+            self._log.info("  (none)")
+        self._log.info("-" * 70)
+
+    def _file_batch_delete(self, title: str, items: List[str], root: Path) -> None:
+            self._log.info(f"{title} — {len(items)}")
+            if items:
+                for p in sorted(items):
+                    full_path = root / Path(p)
+                    self._f.remove_file(full_path)
+                    self._log.debug(f"  🗑️  DELETED DIR {p}")
+            else:
+                self._log.info("  (none)")
+            self._log.info("-" * 70)
+
+    def _purge_unrelated(
             self,
+            root: Path,
             matched: List[str],
             non_matched_dirs: List[str],
             non_matched_files: List[str],
     ) -> None:
         """Human-friendly digest of keep/delete results."""
         self._log.info("\n" + "=" * 70)
-        self._print_section("✅ MATCHED (keep)", matched)
-        self._print_section("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs)
-        self._print_section("📄 NON-MATCHED FILES (delete)", non_matched_files)
+        self._print_matches("✅ MATCHED (keep)", matched)
+        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root)
+        self._file_batch_delete("📄 NON-MATCHED FILES (delete)", non_matched_files, root)
         self._log.info("=" * 70)
 
     @staticmethod
