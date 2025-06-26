@@ -21,9 +21,9 @@ Requires:  pip install pathspec PyYAML
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Tuple, List
 
 from pathspec import PathSpec
-from typing import Tuple, List
 
 from haraka.post_gen.service.fileOps.files import FileOps
 from haraka.utils import Logger, divider
@@ -35,12 +35,6 @@ _MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "manifests"
 # --------------------------------------------------------------------------- #
 # main purger                                                                 #
 # --------------------------------------------------------------------------- #
-def is_dir_protected(rel: str, spec: PathSpec) -> bool:
-    """True if *rel* (or an ancestor) is matched by keep spec."""
-    # `spec.match_file` already walks ancestors for dirs
-    return spec.match_file(rel)
-
-
 class ResourcePurger:
     """Filesystem cleaner driven by variant manifest files."""
 
@@ -48,6 +42,7 @@ class ResourcePurger:
         self._f = fops
         self._log = logger or Logger("ResourcePurger")
         self._log.debug("ResourcePurger initialized with FileOps instance and Logger.")
+        self._protected_dirs: List[str] = []
 
     # ------------------------------ public API ----------------------------- #
     def purge(self, variant: str, project_dir: Path) -> None:
@@ -67,12 +62,11 @@ class ResourcePurger:
 
         raw_patterns, raw_protected_dirs = config.load_manifest(variant)
         keep_patterns = [p.rstrip("/") for p in raw_patterns]
-        protected_dirs = [p.rstrip("/") for p in raw_protected_dirs]
+        self._protected_dirs = [p.rstrip("/") for p in raw_protected_dirs]
 
         self._log.debug(f"Loaded manifest for variant '{variant}': {keep_patterns}")
 
         spec = config.build_spec(keep_patterns)
-        protected_spec = config.build_spec(protected_dirs)
         self._log.debug(f"Built PathSpec for keep patterns. Total patterns: {len(keep_patterns)}")
 
         self._log.info(f"Keeping {len(keep_patterns)} pattern(s)")
@@ -81,9 +75,15 @@ class ResourcePurger:
 
         all_paths = self._walk_tree(project_dir)
 
-        matched, non_dirs, non_files, _ = self.classify_paths(all_paths, project_dir, spec)
+        matched, non_matched_dirs, non_matched_files, directories_skipped = \
+            self.classify_paths(all_paths, project_dir, spec)
 
-        self._purge_unrelated(project_dir, matched, non_dirs, non_files, protected_spec, spec)
+        self._purge_unrelated(
+            project_dir,
+            matched,
+            non_matched_dirs,
+            non_matched_files
+        )
 
         self._log.debug(f"Finished purging unrelated paths in project directory: {project_dir}")
 
@@ -108,7 +108,9 @@ class ResourcePurger:
 
     def classify_paths(
             self,
-            paths: List[Path], root: Path, spec: PathSpec
+            paths: List[Path],
+            root: Path,
+            spec: PathSpec,
     ) -> Tuple[List[str], List[str], List[str], List[str]]:
         """Split paths into keep/delete buckets."""
         matched: List[str] = []
@@ -125,7 +127,8 @@ class ResourcePurger:
                 continue
 
             if path.is_dir():
-                if is_dir_protected(rel, spec):
+                # skip deletion if this dir is exactly in protected list
+                if rel in self._protected_dirs:
                     self._log.debug(f"⏭️  SKIPPING DELETE: Protected ancestor found: {path}")
                     directories_skipped.append(rel)
                 else:
@@ -148,11 +151,12 @@ class ResourcePurger:
             self._log.info("  (none)")
         self._log.info("-" * 70)
 
-    def _dir_batch_delete(self, title: str, items: List[str], root: Path, protected_spec: PathSpec, keep_spec: PathSpec) -> None:
+    def _dir_batch_delete(self, title: str, items: List[str], root: Path) -> None:
         self._log.info(f"{title} — {len(items)}")
         if items:
             for p in sorted(items):
-                if protected_spec.match_file(p) and keep_spec.match_file(p):
+                # only protect exact matches
+                if p in self._protected_dirs:
                     self._log.debug(f"  🛡️  PROTECTED DIRECTORY  DIR {p}")
                 else:
                     full_path = root / Path(p)
@@ -162,37 +166,25 @@ class ResourcePurger:
         self._log.info("-" * 70)
 
     def _file_batch_delete(self, title: str, items: List[str], root: Path) -> None:
-            self._log.info(f"{title} — {len(items)}")
-            if items:
-                for p in sorted(items):
-                    full_path = root / Path(p)
-                    self._f.remove_file(full_path)
-            else:
-                self._log.info("  (none)")
-            self._log.info("-" * 70)
+        self._log.info(f"{title} — {len(items)}")
+        if items:
+            for p in sorted(items):
+                full_path = root / Path(p)
+                self._f.remove_file(full_path)
+        else:
+            self._log.info("  (none)")
+        self._log.info("-" * 70)
 
     def _purge_unrelated(
             self,
             root: Path,
             matched: List[str],
             non_matched_dirs: List[str],
-            non_matched_files: List[str],
-            protected_spec: PathSpec,
-            keep_spec: PathSpec,
+            non_matched_files: List[str]
     ) -> None:
         """Human-friendly digest of keep/delete results."""
         self._log.info("\n" + "=" * 70)
         self._print_matches("✅ MATCHED (keep)", matched)
-        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root, protected_spec, keep_spec)
+        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root)
         self._file_batch_delete("📄 NON-MATCHED FILES (delete)", non_matched_files, root)
         self._log.info("=" * 70)
-
-    @staticmethod
-    def _is_dir_protected(relative_path: str, spec: PathSpec) -> bool:
-        """
-        Walks from `path` up to `root`, and returns True if any ancestor
-        is matched by the spec.
-        """
-        if spec.match_file(relative_path):
-            return True
-        return False
