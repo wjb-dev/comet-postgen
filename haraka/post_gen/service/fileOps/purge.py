@@ -65,12 +65,14 @@ class ResourcePurger:
         self._log.info(f"Starting purge for variant: {variant}")
         self._log.debug(f"Loaded variant for purge: {variant}")
 
-        raw_patterns = config.load_manifest(variant)
+        raw_patterns, raw_protected_dirs = config.load_manifest(variant)
         keep_patterns = [p.rstrip("/") for p in raw_patterns]
+        protected_dirs = [p.rstrip("/") for p in raw_protected_dirs]
 
         self._log.debug(f"Loaded manifest for variant '{variant}': {keep_patterns}")
 
         spec = config.build_spec(keep_patterns)
+        protected_spec = config.build_spec(protected_dirs)
         self._log.debug(f"Built PathSpec for keep patterns. Total patterns: {len(keep_patterns)}")
 
         self._log.info(f"Keeping {len(keep_patterns)} pattern(s)")
@@ -81,7 +83,7 @@ class ResourcePurger:
 
         matched, non_dirs, non_files, _ = self.classify_paths(all_paths, project_dir, spec)
 
-        self._purge_unrelated(project_dir, matched, non_dirs, non_files)
+        self._purge_unrelated(project_dir, matched, non_dirs, non_files, protected_spec)
 
         self._log.debug(f"Finished purging unrelated paths in project directory: {project_dir}")
 
@@ -146,13 +148,14 @@ class ResourcePurger:
             self._log.info("  (none)")
         self._log.info("-" * 70)
 
-    def _dir_batch_delete(self, title: str, items: List[str], root: Path) -> None:
+    def _dir_batch_delete(self, title: str, items: List[str], root: Path, protected_spec: PathSpec) -> None:
         self._log.info(f"{title} — {len(items)}")
         if items:
             for p in sorted(items):
-                full_path = root / Path(p)
-                self._f.remove_dir(full_path)
-                self._log.debug(f"  🗑️  DELETED DIR {p}")
+                if not protected_spec.match_file(p):
+                    full_path = root / Path(p)
+                    self._f.remove_dir(full_path)
+                    self._log.debug(f"  🗑️  DELETED DIR {p}")
         else:
             self._log.info("  (none)")
         self._log.info("-" * 70)
@@ -174,11 +177,12 @@ class ResourcePurger:
             matched: List[str],
             non_matched_dirs: List[str],
             non_matched_files: List[str],
+            protected_spec: PathSpec,
     ) -> None:
         """Human-friendly digest of keep/delete results."""
         self._log.info("\n" + "=" * 70)
         self._print_matches("✅ MATCHED (keep)", matched)
-        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root)
+        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root, protected_spec)
         self._file_batch_delete("📄 NON-MATCHED FILES (delete)", non_matched_files, root)
         self._log.info("=" * 70)
 
