@@ -5,7 +5,7 @@ from haraka.utils import divider, Logger
 from haraka.post_gen.service.command import CommandRunner
 from haraka.post_gen.service.fileOps.files import FileOps
 from haraka.post_gen.service.fileOps.purge import ResourcePurger
-from haraka.post_gen.service.git.gitops import GitOps
+from haraka.post_gen.service.gitOps.gitops import GitOps
 
 
 def main(cfg: PostGenConfig) -> None:
