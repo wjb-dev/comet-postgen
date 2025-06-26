@@ -76,55 +76,72 @@ class ResourcePurger:
         divider("Project tree after purge…")
         self._f.print_tree(project_dir)
 
-    # --------------------------------------------------------------------------- #
-    # internals                                                                   #
-    # --------------------------------------------------------------------------- #
+    # ----------------------------- internals ------------------------------ #
     def _purge_unrelated(self, root: Path, spec: PathSpec) -> None:
         """
-        Walk *root* recursively and delete every path **not** matched by *spec*.
-        A directory is preserved if **it or any ancestor** is matched.
+        Walk the project tree; delete every path NOT matched by *spec*.
+
+        Updated to align with the `test_java_manifest` logic for cleaner organization.
         """
+
+        # Dictionaries to separate matches and non-matches for logging
+
+        # 1) Dump every path under root or state what was found
         all_paths = list(root.rglob("*"))
-        self._log.debug("📋 Scanning %d paths under %s", len(all_paths), root)
+        if self._log.evm:
+            self._log.debug(f"📋 All paths under {root} (total {len(all_paths)}):")
+            for p in all_paths:
+                print(f"{p.relative_to(root)}")
+        else:
+            self._log.debug(f"Found {len(all_paths)} paths under {root})")
 
-        keep: list[str] = []
-        delete_files: list[str] = []
-        delete_dirs: list[str] = []
-
+        matches, non_matched_files, directories_skipped, non_matched_dirs = [], [], [], []
         for path in all_paths:
+            self._log.debug(f"\nScanning path: {path}")
             rel = path.relative_to(root).as_posix()
-
+            self._log.debug(f"Relative path for inspection: {rel}")
+            # Match file against the PathSpec
             if spec.match_file(rel):
-                keep.append(rel)
-                continue
+                self._log.debug(f"✅ KEEP: Path matches keep patterns: {rel}")
+                matches.append(path)  # Collect paths to keep
+            else:
+                if path.is_dir():
+                    if self._is_dir_protected(rel, spec):
+                        self._log.debug(f"{"⏭️ SKIPPING DELETE: Protected ancestor found: %s", path}")
+                        directories_skipped.append(rel)
+                    else:
+                        self._log.debug(f"{"❌ DELETE DIR: %s", rel}")
+                        self._f.remove_dir(path)
+                        non_matched_dirs.append(rel)
+                else:
+                    non_matched_files.append(rel)
+                    self._f.remove_file(path)
+                    self._log.debug(f"{"❌ DELETE FILE: %s", rel}")
+
+            # Non-matching paths: collect and delete
+            self._log.debug(f"❌ DELETE: Path does not match keep patterns: {rel}")
 
             if path.is_dir():
-                if self._dir_has_kept_ancestor(rel, spec):
-                    self._log.debug("⏭️  SKIP DIR (kept ancestor): %s", rel)
-                else:
-                    self._log.debug("❌ DELETE DIR: %s", rel)
-                    delete_dirs.append(rel)
-            else:
-                self._log.debug("❌ DELETE FILE: %s", rel)
-                delete_files.append(rel)
+                directories_skipped.append(path)
+                self._log.debug(f"⏭️ SKIPPING DELETE: Path is a directory: {path}")
 
-        # -- perform deletions -------------------------------------------------- #
-        for f in delete_files:
-            self._f.remove_file(root / f)
+        # Print results cleanly for debugging/logging purposes
+        self._log.info("\nMATCHED PATHS:")
+        self._log.info("=" * 80)
+        for match in matches:
+            self._log.info(f"✅ {match}")
 
-        # delete directories bottom-up to avoid “directory not empty” errors
-        for d in sorted(delete_dirs, key=lambda p: p.count("/"), reverse=True):
-            (root / d).rmdir()
-
-        # -- summary ------------------------------------------------------------ #
-        self._log.info("✅ kept  : %d", len(keep))
-        self._log.info("🗂️ dirs  : %d deleted", len(delete_dirs))
-        self._log.info("📄 files : %d deleted", len(delete_files))
+        self._log.info("\nNOT MATCHED PATHS:")
+        self._log.info("=" * 80)
+        for non_match in non_matched_files:
+            self._log.info(f"❌ {non_match}")
 
     @staticmethod
-    def _dir_has_kept_ancestor(rel: str, spec: PathSpec) -> bool:
+    def _is_dir_protected(relative_path: str, spec: PathSpec) -> bool:
         """
-        Return True if *rel* **or any of its ancestors** is matched by *spec*.
+        Walks from `path` up to `root`, and returns True if any ancestor
+        is matched by the spec.
         """
-        parts = rel.split("/")
-        return any(spec.match_file("/".join(parts[: i + 1])) for i in range(len(parts)))
+        if spec.match_file(relative_path):
+            return True
+        return False
