@@ -78,23 +78,44 @@ class ResourcePurger:
     def _purge_unrelated(self, root: Path, spec: PathSpec) -> None:
         """
         Walk the project tree; delete every path NOT matched by *spec*.
+
+        Updated to align with the `test_java_manifest` logic for cleaner organization.
         """
 
+        # Dictionaries to separate matches and non-matches for logging
+        matches = []
+        non_matches = []
+
+        # Walk the project tree to inspect all paths
         for path in root.rglob("*"):
-            self._log.debug(f"Scanning path: {path}")
+            self._log.debug(f"\nScanning path: {path}")
             rel = path.relative_to(root).as_posix()
             self._log.debug(f"Relative path for inspection: {rel}")
 
-            # Regular file matching
-            if spec.match_file(path):
+            # Match file against the PathSpec
+            if spec.match_file(rel):
                 self._log.debug(f"Path matches keep patterns: {rel}")
-                self._log.debug(f"Keeping file: {rel}")
+                matches.append(path)  # Collect paths to keep
                 continue
 
-            # If path didn't match, delete
+            # Non-matching paths: collect and delete
+            self._log.debug(f"Path does not match keep patterns: {rel}")
+            non_matches.append(path)
             if path.is_dir():
                 self._f.remove_dir(path)
                 self._log.debug(f"Deleted directory: {path}")
             else:
                 self._f.remove_file(path)
                 self._log.debug(f"Deleted file: {path}")
+
+        # Print results cleanly for debugging/logging purposes
+        self._log.info("\nMATCHED PATHS:")
+        self._log.info("=" * 80)
+        for match in matches:
+            self._log.info(f"✅ {match}")
+
+        self._log.info("\nNOT MATCHED PATHS:")
+        self._log.info("=" * 80)
+        for non_match in non_matches:
+            self._log.info(f"❌ {non_match}")
+
