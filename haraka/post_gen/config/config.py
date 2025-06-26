@@ -15,6 +15,7 @@ class PostGenConfig:
     project_dir: Path
     create_repo: bool
     verbose: bool = False
+    evm: bool = False # Extreme Verbosity Mode - For in depth debugging
 
 
 def load_manifest(variant: str) -> list[str]:

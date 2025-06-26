@@ -58,7 +58,9 @@ class ResourcePurger:
         self._log.info(f"Starting purge for variant: {variant}")
         self._log.debug(f"Loaded variant for purge: {variant}")
 
-        keep_patterns = config.load_manifest(variant)
+        raw_patterns = config.load_manifest(variant)
+        keep_patterns = [p.rstrip("/") for p in raw_patterns]
+
         self._log.debug(f"Loaded manifest for variant '{variant}': {keep_patterns}")
 
         spec = config.build_spec(keep_patterns)
@@ -83,30 +85,30 @@ class ResourcePurger:
         """
 
         # Dictionaries to separate matches and non-matches for logging
-        matches = []
-        non_matches = []
 
-        # Walk the project tree to inspect all paths
+        # 1) Dump every path under root or state what was found
         all_paths = list(root.rglob("*"))
-        self._log.debug(f"📋 All paths under {root} (total {len(all_paths)}):")
-        for p in all_paths:
-            # log relative paths so they match what spec.match_file() sees
-            rel = p.relative_to(root)
-            print(f"\"{rel}\", ", end="")
+        if self._log.evm:
+            self._log.debug(f"📋 All paths under {root} (total {len(all_paths)}):")
+            for p in all_paths:
+                print(f"{p.relative_to(root)}")
+        else:
+            self._log.debug(f"Found {len(all_paths)} paths under {root})")
 
-        for path in root.rglob("*"):
+        matches, non_matches = [], []
+        for path in all_paths:
             self._log.debug(f"\nScanning path: {path}")
             rel = path.relative_to(root).as_posix()
             self._log.debug(f"Relative path for inspection: {rel}")
 
             # Match file against the PathSpec
             if spec.match_file(rel):
-                self._log.debug(f"Path matches keep patterns: {rel}")
+                self._log.debug(f"✅ KEEP: Path matches keep patterns: {rel}")
                 matches.append(path)  # Collect paths to keep
                 continue
 
             # Non-matching paths: collect and delete
-            self._log.debug(f"Path does not match keep patterns: {rel}")
+            self._log.debug(f"❌ DELETE: Path does not match keep patterns: {rel}")
             non_matches.append(path)
             if path.is_dir():
                 self._f.remove_dir(path)

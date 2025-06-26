@@ -4,9 +4,10 @@ from typing import TextIO
 
 
 class Logger:
-    def __init__(self, label: str = "", verbose: bool = False) -> None:
+    def __init__(self, label: str = "", verbose: bool = False, evm: bool = True) -> None:
         self.label = label
         self.verbose = verbose
+        self.evm = evm # Extreme Verbosity Mode (In-depth debug logs)
 
     def start_logger(self, verbose) -> Logger:
         label = Logger.get_label(self.label)
