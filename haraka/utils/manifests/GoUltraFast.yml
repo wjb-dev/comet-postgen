@@ -1,4 +1,4 @@
-variant: go-grpc-protoc
+variant: GoUltraFast
 
 keep:
   # ── application source (Go) ─────────────────────────

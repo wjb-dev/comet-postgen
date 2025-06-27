@@ -7,7 +7,7 @@ variant, as defined by a YAML manifest in `haraka/manifests/<variant>.yml`.
 
 Manifest format (git-wildmatch globs):
 
-    variant: python-fastapi
+    variant: PyFast
     keep:
       - src/app/**
       - tests/**
@@ -52,7 +52,7 @@ class ResourcePurger:
         Parameters
         ----------
         variant
-            Variant key, e.g. ``python-fastapi`` or ``go-grpc-protoc``.
+            Variant key, e.g. ``PyFast`` or ``GoUltraFast``.
         project_dir
             Root of the freshly generated Cookiecutter project.
         """

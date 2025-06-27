@@ -68,7 +68,7 @@ def main(cfg: PostGenConfig) -> None:
     divider("🎉 Project generation complete 🎉")
     logger.debug("Project generation completed")
 
-    if cfg.variant == "go-grpc-protoc":
+    if cfg.variant == "GoUltraFast":
         logger.debug(f"Detected variant: {cfg.variant}, beginning Go-specific steps")
         go_emoji_logo = [emoji["go"]]
         go_performance_mode = [

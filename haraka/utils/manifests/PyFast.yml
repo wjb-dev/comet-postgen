@@ -1,4 +1,4 @@
-variant: python-fastapi
+variant: PyFast
 
 keep:
   # ── application source ─────────────────────────────
