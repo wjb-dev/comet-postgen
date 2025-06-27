@@ -10,12 +10,13 @@ _MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "utils" / "manif
 class PostGenConfig:
     variant: str
     project_slug: str
-    author: str
-    description: str
+    author_gh: str
     project_dir: Path
-    create_repo: bool
+    description: str
+    use_git: bool
+    confirm_remote: bool
     verbose: bool = False
-    evm: bool = False # Extreme Verbosity Mode - For in depth debugging
+    evm: bool = False # Extreme Verbosity Mode - For in depth debugging dev tool
 
 
 def load_manifest(variant: str) -> Tuple[List[str], List[str]]:

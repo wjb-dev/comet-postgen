@@ -2,7 +2,6 @@ variant: python-fastapi
 
 keep:
   # ── application source ─────────────────────────────
-  - src/
   - src/app/
   - src/app/**
 
@@ -18,7 +17,6 @@ keep:
   - README.md
 
   # ── IDE / run configs ──────────────────────────────
-  - runConfigurations/
   - runConfigurations/Python/
   - runConfigurations/Python/FastAPI.run.xml
 
@@ -28,3 +26,7 @@ keep:
   - chart/**
   - infra/
   - infra/**
+
+protected:
+  - src
+  - runConfigurations

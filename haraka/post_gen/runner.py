@@ -38,10 +38,7 @@ def main(cfg: PostGenConfig) -> None:
     purge.purge(cfg.variant, cfg.project_dir)
     logger.debug(f"Purge completed for variant: {cfg.variant} in directory: {cfg.project_dir}")
 
-    logger.info("Skipping git repo creation (steps 2-4)...")
-    logger.debug(f"Configuration for create_repo: {cfg.create_repo}")
-
-    if cfg.create_repo:
+    if cfg.use_git:
 
         divider("2️⃣  / 4️⃣  – Initialise Git repo")
         logger.debug("Starting Git repository initialization")
@@ -55,11 +52,18 @@ def main(cfg: PostGenConfig) -> None:
         git.stage_commit(cfg.project_dir)
         logger.debug(f"Initial commit completed in directory: {cfg.project_dir}")
 
-        divider("4️⃣  / 4️⃣  – Create GitHub repo & push")
-        logger.debug("Starting GitHub repository creation and push")
+        if cfg.confirm_remote and cfg.author_gh:
+            divider("4️⃣  / 4️⃣  – Create GitHub repo & push")
+            logger.debug("Starting GitHub repository creation and push")
 
-        git.push_to_github(cfg.project_dir, cfg.author, cfg.project_slug, cfg.description)
-        logger.debug(f"Pushed to GitHub: Author: {cfg.author}, Slug: {cfg.project_slug}, Description: {cfg.description}")
+            git.push_to_github(cfg.project_dir, cfg.author_gh, cfg.project_slug, cfg.description)
+            logger.debug(f"Pushed to GitHub: Author: {cfg.author_gh}, Slug: {cfg.project_slug}, Description: {cfg.description}")
+        else:
+            logger.info("Skipping create remote (step 4)...")
+            logger.debug(f"Configuration for confirm_remote: {cfg.confirm_remote}")
+    else:
+        logger.info("Skipping git repo creation (steps 2-4)...")
+        logger.debug(f"Configuration for use_git: {cfg.use_git}")
 
     divider("🎉 Project generation complete 🎉")
     logger.debug("Project generation completed")
