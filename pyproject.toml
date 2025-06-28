@@ -32,14 +32,16 @@ where = ["."]
 include-package-data = true
 
 [project.dependencies]
-# Define your default (base) dependencies here. These will install by default.
-pathspec = "==0.10.3"
-PyYAML = "==6.0.1"
-wcwidth = "==0.2.5"
-fastapi = "==0.115.14"
+# Define your default (base) dependencies here as an array of strings
+dependencies = [
+    "pathspec==0.10.3",
+    "PyYAML==6.0.1",
+    "wcwidth==0.2.5",
+    "fastapi==0.115.14"
+]
 
 [project.optional-dependencies]
-# Dependency groups that can be installed optionally
+# Optional dependency groups
 gen = [
     "pathspec==0.10.3",
     "PyYAML==6.0.1",
