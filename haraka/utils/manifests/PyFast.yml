@@ -17,8 +17,8 @@ keep:
   - README.md
 
   # ── IDE / run configs ──────────────────────────────
-  - runConfigurations/Python/
-  - runConfigurations/Python/FastAPI.run.xml
+  - runConfigurations/FastAPI/
+  - runConfigurations/FastAPI/FastAPI.run.xml
 
   # ── deployment & infra (shared) ────────────────────
   - skaffold.yaml
