@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import socket
 from haraka.utils import Logger
 
-class PyFast:
+class Lifecycle:
     """
     A helper class to handle initialization and shutdown messaging for a FastAPI application.
     """
@@ -16,7 +16,7 @@ class PyFast:
         self.variant = variant
         self.logger = Logger(self.variant).start_logger()
 
-    def init(self, settings, app: FastAPI):
+    def start(self, settings, app: FastAPI):
         """
         Initializes the application and logs Swagger UI availability.
 
