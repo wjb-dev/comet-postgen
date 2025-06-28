@@ -1,0 +1,5 @@
+fastapi==0.115.14
+pathspec==0.10.3
+PyYAML==6.0.1
+PyYAML==6.0.2
+wcwidth==0.2.5
