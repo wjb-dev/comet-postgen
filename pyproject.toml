@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "haraka"
-version         = "0.2.58"  # Incremented version
+version         = "0.2.59"  # Incremented version
 description     = "Reusable post-generation helper for Cookiecutter micro-service templates"
 readme          = "README.md"
 license         = {text = "MIT"}
