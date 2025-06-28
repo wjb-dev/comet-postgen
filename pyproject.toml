@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "haraka"
-version         = "0.2.52"
+version         = "0.2.53"  # Incremented version
 description     = "Reusable post-generation helper for Cookiecutter micro-service templates"
 readme          = "README.md"
 license         = {text = "MIT"}
@@ -31,3 +31,21 @@ where = ["."]
 [tool.setuptools]
 include-package-data = true
 
+[project.dependencies]
+# Define your default (base) dependencies here. These will install by default.
+pathspec = "==0.10.3"
+PyYAML = "==6.0.1"
+wcwidth = "==0.2.5"
+fastapi = "==0.115.14"
+
+[project.optional-dependencies]
+# Dependency groups that can be installed optionally
+gen = [
+    "pathspec==0.10.3",
+    "PyYAML==6.0.1",
+    "wcwidth==0.2.5",
+]
+
+PyFast = [
+    "fastapi==0.115.14",
+]
