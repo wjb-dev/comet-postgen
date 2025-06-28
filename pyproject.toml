@@ -10,6 +10,12 @@ readme          = "README.md"
 license         = {text = "MIT"}
 authors         = [{name = "Will Burks", email = "will@example.com"}]
 requires-python = ">=3.9"
+dependencies = [
+  "pathspec==0.10.3",
+  "PyYAML==6.0.1",
+  "wcwidth==0.2.5",
+  "fastapi==0.115.14"
+]
 
 classifiers = [
   "Programming Language :: Python :: 3",
@@ -30,13 +36,6 @@ where = ["."]
 
 [tool.setuptools]
 include-package-data = true
-
-dependencies = [
-  "pathspec==0.10.3",
-  "PyYAML==6.0.1",
-  "wcwidth==0.2.5",
-  "fastapi==0.115.14"
-]
 
 [project.optional-dependencies]
 gen = [
