@@ -1,47 +1,49 @@
+from enum import Enum, auto
 from fastapi import FastAPI
 import socket
 from haraka.utils import Logger
 
+
+class LifecycleState(Enum):
+    UNINITIALIZED = auto()
+    STARTED = auto()
+    DESTROYED = auto()
+
+
 class Lifecycle:
     """
     A helper class to handle initialization and shutdown messaging for a FastAPI application.
+    Tracks internal state to guard against invalid transitions.
     """
     def __init__(self, variant: str = "PyFast"):
-        """
-        Initializes the PyFast instance with a logger.
-
-        Args:
-            variant (str): A string identifier for the application. Default is 'PyFast'.
-        """
         self.variant = variant
         self.logger = Logger(self.variant).start_logger()
+        self.state = LifecycleState.UNINITIALIZED
 
-    def start(self, settings, app: FastAPI):
-        """
-        Initializes the application and logs Swagger UI availability.
+    async def start(self, settings, app: FastAPI):
+        if self.state != LifecycleState.UNINITIALIZED:
+            self.logger.warn(f"🟡 Attempted to start, but state is already {self.state.name}")
+            return
 
-        Args:
-            settings: A settings object containing application configuration (e.g., port).
-            app (FastAPI): The FastAPI application instance.
-        """
         try:
             port = settings.port
-            docs_path = app.docs_url or "/docs"  # Default to '/docs' if not set
+            docs_path = app.docs_url or "/docs"
             local_url = f"http://localhost:{port}{docs_path}"
 
-            # Resolve the network-accessible hostname
             host = socket.gethostbyname(socket.gethostname())
             network_url = f"http://{host}:{port}{docs_path}"
 
-            # Log the Swagger UI URLs
-            self.logger.info(f"Swagger UI available at: {local_url}")
-            self.logger.info(f"Network Swagger UI available at: {network_url}")
+            self.logger.info(f"✅ Swagger UI available at: {local_url}")
+            self.logger.info(f"🌐 Network Swagger UI available at: {network_url}")
+            self.state = LifecycleState.STARTED
 
         except Exception as e:
-            self.logger.warn(f"Failed to determine network URL: {e}")
+            self.logger.warn(f"⚠️ Failed to determine network URL: {e}")
 
-    def destroy(self):
-        """
-        Logs a shutdown message when the application is shutting down.
-        """
+    async def destroy(self):
+        if self.state == LifecycleState.DESTROYED:
+            self.logger.warn("🟡 destroy() called, but app is already shut down.")
+            return
+
         self.logger.info("🛑 Application is shutting down!")
+        self.state = LifecycleState.DESTROYED
