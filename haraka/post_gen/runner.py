@@ -35,7 +35,7 @@ def main(cfg: PostGenConfig) -> None:
     divider("1️⃣  / 4️⃣  – Purge template junk")
     logger.debug("Starting template junk purge")
 
-    purge.purge(cfg.variant, cfg.project_dir)
+    purge.purge(cfg.variant, cfg.project_dir, cfg.services)
     logger.debug(f"Purge completed for variant: {cfg.variant} in directory: {cfg.project_dir}")
 
     if cfg.use_git:

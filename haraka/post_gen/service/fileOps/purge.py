@@ -13,6 +13,12 @@ Manifest format (git-wildmatch globs):
       - tests/**
       - Dockerfile
       - chart/**
+    protected:
+      - runConfigurations
+    services:
+      kafka:
+        - src/kafka/**
+        - configs/kafka.yaml
 
 Anything matching a `keep:` pattern survives. Everything else is removed.
 
@@ -29,12 +35,7 @@ from haraka.post_gen.service.fileOps.files import FileOps
 from haraka.utils import Logger, divider
 from haraka.post_gen.config import config
 
-_MANIFEST_DIR = Path(__file__).resolve().parent.parent.parent / "manifests"
 
-
-# --------------------------------------------------------------------------- #
-# main purger                                                                 #
-# --------------------------------------------------------------------------- #
 class ResourcePurger:
     """Filesystem cleaner driven by variant manifest files."""
 
@@ -44,8 +45,7 @@ class ResourcePurger:
         self._log.debug("ResourcePurger initialized with FileOps instance and Logger.")
         self._protected_dirs: List[str] = []
 
-    # ------------------------------ public API ----------------------------- #
-    def purge(self, variant: str, project_dir: Path) -> None:
+    def purge(self, variant: str, project_dir: Path, enabled_services: List[str] = []) -> None:
         """
         Remove everything outside the manifest’s `keep:` patterns.
 
@@ -55,21 +55,29 @@ class ResourcePurger:
             Variant key, e.g. ``PyFast`` or ``GoUltraFast``.
         project_dir
             Root of the freshly generated Cookiecutter project.
+        enabled_services
+            Optional list of enabled services to include in keep patterns.
         """
         variant = variant.lower()
         self._log.info(f"Starting purge for variant: {variant}")
-        self._log.debug(f"Loaded variant for purge: {variant}")
+        manifest = config.load_manifest(variant)  # assumes full manifest dict
 
-        raw_patterns, raw_protected_dirs = config.load_manifest(variant)
-        keep_patterns = [p.rstrip("/") for p in raw_patterns]
-        self._protected_dirs = [p.rstrip("/") for p in raw_protected_dirs]
+        raw_keep = manifest.get("keep", []) or []
+        raw_protected = manifest.get("protected", []) or []
+        service_patterns = manifest.get("services", {}) or {}
 
-        self._log.debug(f"Loaded manifest for variant '{variant}': {keep_patterns}")
+        keep_patterns = [p.rstrip("/") for p in raw_keep]
+        self._protected_dirs = [p.rstrip("/") for p in raw_protected]
+
+        for service in enabled_services:
+            if service in service_patterns:
+                self._log.debug(f"✅ Including service paths for: {service}")
+                keep_patterns.extend(p.rstrip("/") for p in service_patterns[service])
+            else:
+                self._log.warn(f"⚠️ No manifest section for enabled service: {service}")
 
         spec = config.build_spec(keep_patterns)
-        self._log.debug(f"Built PathSpec for keep patterns. Total patterns: {len(keep_patterns)}")
-
-        self._log.info(f"Keeping {len(keep_patterns)} pattern(s)")
+        self._log.debug(f"Built PathSpec for keep patterns. Total: {len(keep_patterns)}")
         for pattern in keep_patterns:
             self._log.debug(f"Keep pattern: {pattern}")
 
@@ -82,41 +90,33 @@ class ResourcePurger:
             project_dir,
             matched,
             non_matched_dirs,
-            non_matched_files
+            non_matched_files,
+            directories_skipped
         )
 
         self._log.debug(f"Finished purging unrelated paths in project directory: {project_dir}")
-
         divider("Project tree after purge…")
         self._f.print_tree(project_dir)
 
-
-    # ----------------------------- internals ------------------------------ #
-
     def _walk_tree(self, root: Path) -> List[Path]:
-        """Return every file/dir under *root*, logging the walk."""
         paths = list(root.rglob("*"))
-        self._log.debug(f"📋 All paths under {root} (total {len(paths)}:")
+        self._log.debug(f"📋 All paths under {root} (total {len(paths)}):")
         for p in paths:
             self._log.debug(f"   {p.relative_to(root)}")
         return paths
 
-
-    # --------------------------------------------------------------------------- #
-    # Classification helpers                                                      #
-    # --------------------------------------------------------------------------- #
-
     def classify_paths(
-            self,
-            paths: List[Path],
-            root: Path,
-            spec: PathSpec,
+        self,
+        paths: List[Path],
+        root: Path,
+        spec: PathSpec,
     ) -> Tuple[List[str], List[str], List[str], List[str]]:
-        """Split paths into keep/delete buckets."""
         matched: List[str] = []
         non_matched_files: List[str] = []
         non_matched_dirs: List[str] = []
         directories_skipped: List[str] = []
+
+        matched_set = set()
 
         for path in paths:
             rel = path.relative_to(root).as_posix()
@@ -124,25 +124,23 @@ class ResourcePurger:
             if spec.match_file(rel):
                 self._log.debug(f"✅ KEEP      {rel}")
                 matched.append(rel)
+                matched_set.add(rel)
                 continue
 
             if path.is_dir():
-                # skip deletion if this dir is exactly in protected list
                 if rel in self._protected_dirs:
-                    self._log.debug(f"⏭️  SKIPPING DELETE: Protected ancestor found: {path}")
+                    self._log.debug(f"⏭️  SKIPPING DELETE: Protected directory: {rel}")
                     directories_skipped.append(rel)
                 else:
                     self._log.debug(f"❌ DELETE DIR: {rel}")
                     non_matched_dirs.append(rel)
             else:
+                self._log.debug(f"❌ DELETE FILE: {rel}")
                 non_matched_files.append(rel)
 
         return matched, non_matched_dirs, non_matched_files, directories_skipped
 
-    # --------------------------------------------------------------------------- #
-    # Summary printing helpers                                                    #
-    # --------------------------------------------------------------------------- #
-    def _print_matches(self, title: str, items: List[str]) -> None:
+    def _print_section(self, title: str, items: List[str]) -> None:
         self._log.info(f"{title} — {len(items)}")
         if items:
             for p in sorted(items):
@@ -151,40 +149,41 @@ class ResourcePurger:
             self._log.info("  (none)")
         self._log.info("-" * 70)
 
-    def _dir_batch_delete(self, title: str, items: List[str], root: Path) -> None:
-        self._log.info(f"{title} — {len(items)}")
-        if items:
-            for p in sorted(items):
-                # only protect exact matches
-                if p in self._protected_dirs:
-                    self._log.debug(f"  🛡️  PROTECTED DIRECTORY  DIR {p}")
-                else:
-                    full_path = root / Path(p)
-                    self._f.remove_dir(full_path)
-        else:
-            self._log.info("  (none)")
-        self._log.info("-" * 70)
-
-    def _file_batch_delete(self, title: str, items: List[str], root: Path) -> None:
-        self._log.info(f"{title} — {len(items)}")
-        if items:
-            for p in sorted(items):
+    def _dir_batch_delete(self, items: List[str], root: Path) -> None:
+        for p in sorted(items):
+            if p in self._protected_dirs:
+                self._log.debug(f"  🛡️  PROTECTED DIRECTORY: {p}")
+            else:
                 full_path = root / Path(p)
-                self._f.remove_file(full_path)
-        else:
-            self._log.info("  (none)")
-        self._log.info("-" * 70)
+                self._f.remove_dir(full_path)
+
+    def _file_batch_delete(self, items: List[str], root: Path) -> None:
+        for p in sorted(items):
+            full_path = root / Path(p)
+            self._f.remove_file(full_path)
 
     def _purge_unrelated(
-            self,
-            root: Path,
-            matched: List[str],
-            non_matched_dirs: List[str],
-            non_matched_files: List[str]
+        self,
+        root: Path,
+        matched: List[str],
+        non_matched_dirs: List[str],
+        non_matched_files: List[str],
+        directories_skipped: List[str],
     ) -> None:
-        """Human-friendly digest of keep/delete results."""
         self._log.info("\n" + "=" * 70)
-        self._print_matches("✅ MATCHED (keep)", matched)
-        self._dir_batch_delete("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs, root)
-        self._file_batch_delete("📄 NON-MATCHED FILES (delete)", non_matched_files, root)
+        self._print_section("✅ MATCHED (keep)", matched)
+        self._log.info("=" * 70)
+
+        self._log.info("\n" + "=" * 70)
+        self._print_section("⏭️  SKIPPED PROTECTED DIRECTORIES", directories_skipped)
+        self._log.info("=" * 70)
+
+        self._log.info("\n" + "=" * 70)
+        self._print_section("🗂️  NON-MATCHED DIRECTORIES (delete)", non_matched_dirs)
+        self._dir_batch_delete(non_matched_dirs, root)
+        self._log.info("=" * 70)
+
+        self._log.info("\n" + "=" * 70)
+        self._print_section("📄 NON-MATCHED FILES (delete)", non_matched_files)
+        self._file_batch_delete(non_matched_files, root)
         self._log.info("=" * 70)

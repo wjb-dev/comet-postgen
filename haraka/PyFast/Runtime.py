@@ -51,9 +51,11 @@ class Orchestrator:
 
     def mark_ready(self, name: str):
         event = self._service_events.get(name)
-        if event:
+        if event and not event.is_set():
             event.set()
             self.logger.info(f"✅ Service '{name}' is ready.")
+        elif event:
+            self.logger.debug(f"🔁 Service '{name}' was already marked ready.")
         else:
             self.logger.warn(f"⚠️ Tried to mark unknown service '{name}' as ready")
 
@@ -70,6 +72,7 @@ class Orchestrator:
             raise
 
     def use(self, service: Service):
+        service.runtime = self
         self._services.append(service)
         self.register_service(service.name)
 
@@ -78,12 +81,9 @@ class Orchestrator:
             self.logger.warn(f"🟡 Already started or shut down: {self.state.name}")
             return
 
-        self._print_docs_url(settings, app)
-
         for svc in self._services:
             try:
                 await svc.startup()
-                self.mark_ready(svc.name)
             except Exception as e:
                 self.logger.error(f"❌ Failed to start {svc.name}", extra={"error": str(e)})
                 if not getattr(svc, "fail_silently", lambda: False)():
@@ -93,6 +93,7 @@ class Orchestrator:
             task = asyncio.create_task(self._wrap_task(task_fn))
             self._running_tasks.append(task)
 
+        self._print_docs_url(settings, app)
         self.state = LifecycleState.STARTED
 
     async def destroy(self):

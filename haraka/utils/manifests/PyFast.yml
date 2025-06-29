@@ -2,8 +2,16 @@ variant: PyFast
 
 keep:
   # ── application source ─────────────────────────────
-  - src/app/
-  - src/app/**
+  - src/app/main.py
+  - src/app/core/
+  - src/app/core/**
+  - src/app/swagger/
+  - src/app/swagger/**
+  - src/app/schemas/health.py
+  - src/app/services/health.py
+  - src/app/services/__init__.py
+  - src/app/api/v1/routers/
+
 
   # ── tests ──────────────────────────────────────────
   - tests/
@@ -18,8 +26,6 @@ keep:
 
   # ── IDE / run configs ──────────────────────────────
   - runConfigurations/FastAPI/
-  - runConfigurations/FastAPI/FastAPI.run.xml
-
   # ── deployment & infra (shared) ────────────────────
   - skaffold.yaml
   - chart/
@@ -30,3 +36,16 @@ keep:
 protected:
   - src
   - runConfigurations
+  - runConfigurations/FastAPI/FastAPI.run.xml
+
+
+services:
+  kafka:
+    - docker-compose.kafka.yml
+    - runConfigurations/FastAPI/FastAPI-Kafka.run.xml
+    - runConfigurations/FastAPI/MakeBuild.run.xml
+    - src/app/api/v1/routers/kafka.py
+    - src/app/schemas/kafka.py
+    - src/app/services/kafka/
+    - src/app/services/kafka/**
+

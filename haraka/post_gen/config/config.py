@@ -16,35 +16,37 @@ class PostGenConfig:
     use_git: bool
     confirm_remote: bool
     verbose: bool = False
+    services: List[str] = None
     evm: bool = False # Extreme Verbosity Mode - For in depth debugging dev tool
 
 
-def load_manifest(variant: str) -> Tuple[List[str], List[str]]:
-    """Return the `keep:` pattern list from `<variant>.yml`."""
+def load_manifest(variant: str) -> dict:
+    """Return the entire manifest dictionary for the given variant."""
     manifest_path = _MANIFEST_DIR / f"{variant}.yml"
     if not manifest_path.exists():
         raise FileNotFoundError(
             f"No manifest found for variant '{variant}' "
             f"(expected {manifest_path})"
         )
+
     doc = yaml.safe_load(manifest_path.read_text())
     if not isinstance(doc, dict):
-        if "keep" not in doc:
-            raise ValueError(f"Manifest {manifest_path} missing a `keep:` section")
+        raise ValueError(f"Manifest {manifest_path} must be a dictionary")
 
-        if "protected" not in doc:
-            raise ValueError(f"Manifest {manifest_path} missing a `protected:` section")
+    if "keep" not in doc:
+        raise ValueError(f"Manifest {manifest_path} missing a `keep:` section")
 
-    keep_patterns = doc["keep"]
-    protected_dirs = doc.get("protected", [])
+    if "protected" not in doc:
+        raise ValueError(f"Manifest {manifest_path} missing a `protected:` section")
 
-    if not isinstance(keep_patterns, Iterable):
+    if not isinstance(doc["keep"], Iterable):
         raise TypeError(f"`keep` section in {manifest_path} must be a list")
 
-    if not isinstance(protected_dirs, Iterable):
-            raise TypeError(f"`protected` section in {manifest_path} must be a list")
+    if not isinstance(doc["protected"], Iterable):
+        raise TypeError(f"`protected` section in {manifest_path} must be a list")
 
-    return list(keep_patterns), list(protected_dirs)
+    return doc
+
 
 
 def build_spec(patterns: Iterable[str]) -> PathSpec:
