@@ -2,6 +2,7 @@ variant: PyFast
 
 keep:
   # ── application source ─────────────────────────────
+  - src/app/__init__.py
   - src/app/main.py
   - src/app/core/
   - src/app/core/**
@@ -10,7 +11,10 @@ keep:
   - src/app/schemas/health.py
   - src/app/services/health.py
   - src/app/services/__init__.py
-  - src/app/api/v1/routers/
+  - src/app/api/v1/routers/health.py
+  - src/app/api/v1/__init__.py
+  - src/app/swagger_config/
+  - src/app/swagger_config/**
 
 
   # ── tests ──────────────────────────────────────────

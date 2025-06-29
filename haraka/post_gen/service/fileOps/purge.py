@@ -118,19 +118,34 @@ class ResourcePurger:
 
         matched_set = set()
 
+        # First pass: collect all explicitly matched paths
         for path in paths:
             rel = path.relative_to(root).as_posix()
-
             if spec.match_file(rel):
                 self._log.debug(f"✅ KEEP      {rel}")
                 matched.append(rel)
                 matched_set.add(rel)
+
+                # Also mark parent directories
+                parent = Path(rel)
+                while parent != Path("."):
+                    parent = parent.parent
+                    matched_set.add(parent.as_posix())
+
+        # Second pass: classify remaining paths
+        for path in paths:
+            rel = path.relative_to(root).as_posix()
+
+            if rel in matched_set:
                 continue
 
             if path.is_dir():
                 if rel in self._protected_dirs:
                     self._log.debug(f"⏭️  SKIPPING DELETE: Protected directory: {rel}")
                     directories_skipped.append(rel)
+                elif rel in matched_set:
+                    self._log.debug(f"✅ KEEP IMPLIED DIR: {rel}")
+                    matched.append(rel)
                 else:
                     self._log.debug(f"❌ DELETE DIR: {rel}")
                     non_matched_dirs.append(rel)
@@ -138,7 +153,7 @@ class ResourcePurger:
                 self._log.debug(f"❌ DELETE FILE: {rel}")
                 non_matched_files.append(rel)
 
-        return matched, non_matched_dirs, non_matched_files, directories_skipped
+        return sorted(set(matched)), non_matched_dirs, non_matched_files, directories_skipped
 
     def _print_section(self, title: str, items: List[str]) -> None:
         self._log.info(f"{title} — {len(items)}")

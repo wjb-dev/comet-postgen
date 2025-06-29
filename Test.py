@@ -12,61 +12,52 @@ class ManifestDrivenCleaner:
     A class to perform manifest-driven keep/delete checks for a project tree.
 
     1. Loads “keep” and “protected” globs from a YAML manifest.
-    2. Walks every path under a root directory.
-    3. Classifies paths into keep / delete (files & dirs).
-    4. Prints a tidy summary.
+    2. Optionally includes service-specific paths based on enabled services.
+    3. Walks every path under a root directory.
+    4. Classifies paths into keep / delete (files & dirs).
+    5. Prints a tidy summary.
     """
 
-    def __init__(self, manifest_path: Path, project_dir: Path) -> None:
+    def __init__(self, manifest_path: Path, project_dir: Path, enabled_services: List[str] = []) -> None:
         self.manifest_path = manifest_path
         self.project_dir = project_dir
+        self.enabled_services = enabled_services
         self.keep_patterns: List[str] = []
         self._protected_dirs: List[str] = []
         self.logger = logging.getLogger(self.__class__.__name__)
-        logging.basicConfig(level=logging.DEBUG, format="%(levelname)-5s %(message)s")
+        logging.basicConfig(level=logging.INFO, format="%(levelname)-5s %(message)s")
 
-    # --------------------------------------------------------------------------- #
-    # I/O helpers                                                                 #
-    # --------------------------------------------------------------------------- #
     def load_keep_patterns(self) -> Tuple[List[str], List[str]]:
-        """Loads keep-globs and protected-globs from YAML, normalized (no trailing ‘/’)."""
         with self.manifest_path.open() as f:
             cfg = yaml.safe_load(f)
 
-        raw_keep_patterns = cfg.get("keep", [])
-        raw_protected_dirs = cfg.get("protected", [])
+        raw_keep_patterns = cfg.get("keep", []) or []
+        raw_protected_dirs = cfg.get("protected", []) or []
+        self.raw_services = cfg.get("services", {}) or {}
 
+        # Start with the unconditional keep patterns
         self.keep_patterns = [p.rstrip("/") for p in raw_keep_patterns]
         self._protected_dirs = [p.rstrip("/") for p in raw_protected_dirs]
 
-        self.logger.debug("Normalized keep patterns:")
-        for pat in self.keep_patterns:
-            self.logger.debug("   %s", pat)
-
-        self.logger.debug("Normalized protected patterns:")
-        for pat in self._protected_dirs:
-            self.logger.debug("   %s", pat)
+        # Add service-specific patterns if enabled
+        for service in self.enabled_services:
+            if service in self.raw_services:
+                self.logger.debug("✅ Including service paths for: %s", service)
+                self.keep_patterns.extend(p.rstrip("/") for p in self.raw_services[service])
+            else:
+                self.logger.warning("⚠️ No manifest section for enabled service: %s", service)
 
         return self.keep_patterns, self._protected_dirs
 
     def build_pathspec(self, patterns: List[str]) -> PathSpec:
-        """Build a PathSpec from gitwildmatch lines."""
         return PathSpec.from_lines("gitwildmatch", patterns)
 
     def walk_tree(self) -> List[Path]:
-        """Return every file/dir under the root_path, logging the walk."""
         paths = list(self.project_dir.rglob("*"))
         self.logger.debug("📋 All paths under %s (total %d):", self.project_dir, len(paths))
         for p in paths:
             self.logger.debug("   %s", p.relative_to(self.project_dir))
         return paths
-
-    # --------------------------------------------------------------------------- #
-    # Classification helpers                                                      #
-    # --------------------------------------------------------------------------- #
-    def is_dir_protected(self, rel: str, spec: PathSpec) -> bool:
-        """True if *rel* (or an ancestor) is matched by the protected spec."""
-        return spec.match_file(rel)
 
     def classify_paths(
             self,
@@ -74,35 +65,51 @@ class ManifestDrivenCleaner:
             root: Path,
             spec: PathSpec
     ) -> Tuple[List[str], List[str], List[str], List[str]]:
-        """Split paths into keep/delete buckets."""
         matched: List[str] = []
         non_matched_files: List[str] = []
         non_matched_dirs: List[str] = []
         directories_skipped: List[str] = []
 
+        matched_set = set()
+
+        # First pass: collect all explicitly matched paths
         for path in paths:
             rel = path.relative_to(self.project_dir).as_posix()
-
             if spec.match_file(rel):
                 self.logger.debug("✅ KEEP      %s", rel)
                 matched.append(rel)
+                matched_set.add(rel)
+
+                # Also mark parent directories
+                parent = Path(rel)
+                while parent != Path("."):
+                    parent = parent.parent
+                    matched_set.add(parent.as_posix())
+
+        # Second pass: classify remaining paths
+        for path in paths:
+            rel = path.relative_to(self.project_dir).as_posix()
+
+            if rel in matched_set:
+                # Don't duplicate log for already added paths
                 continue
 
             if path.is_dir():
                 if rel in self._protected_dirs:
-                    self.logger.debug("⏭️  SKIPPING DELETE: Protected ancestor found: %s", path)
+                    self.logger.debug("⏭️  SKIPPED: Protected directory: %s", rel)
                     directories_skipped.append(rel)
+                elif rel in matched_set:
+                    self.logger.debug("✅ KEEP IMPLIED DIR: %s", rel)
+                    matched.append(rel)
                 else:
-                    self.logger.debug("❌ DELETE DIR: %s", rel)
+                    self.logger.debug("⚠️  CLASSIFIED FOR DELETION (DIR): %s", rel)
                     non_matched_dirs.append(rel)
             else:
+                self.logger.debug("⚠️  CLASSIFIED FOR DELETION (FILE): %s", rel)
                 non_matched_files.append(rel)
 
-        return matched, non_matched_dirs, non_matched_files, directories_skipped
+        return sorted(set(matched)), non_matched_dirs, non_matched_files, directories_skipped
 
-    # --------------------------------------------------------------------------- #
-    # Summary printing helpers                                                    #
-    # --------------------------------------------------------------------------- #
     def _print_section(self, title: str, items: List[str]) -> None:
         self.logger.info("%s — %d", title, len(items))
         if items:
@@ -116,13 +123,11 @@ class ManifestDrivenCleaner:
         self.logger.info("-" * 70)
 
     def print_summary(
-            self,
-            matched: List[str],
-            non_matched_dirs: List[str],
-            non_matched_files: List[str]
-
+        self,
+        matched: List[str],
+        non_matched_dirs: List[str],
+        non_matched_files: List[str]
     ) -> None:
-        """Human-friendly digest of keep/delete results."""
         self.logger.info("\n" + "=" * 70)
         self._print_section("✅  MATCHED ITEMS (keep)", matched)
         self.logger.info("=" * 70)
@@ -135,49 +140,36 @@ class ManifestDrivenCleaner:
         self._print_section("📑  NON-MATCHED FILES (delete)", non_matched_files)
         self.logger.info("=" * 70)
 
-
-
-    def delete_empty_subdirs(self, directory: Path) -> None:
-        """
-        Deletes only empty subdirectories within a given directory.
-
-        Args:
-            directory (Path): The directory to check for empty subdirectories.
-        """
+    def scan_empty_subdirs(self, directory: Path) -> None:
+        self.logger.debug(f"Scanning for empty subdirectories in: {directory}")
         for subdir in directory.iterdir():
             self.logger.debug(f"  🗑️  SCANNING  {subdir}")
-            if subdir.is_dir():  # Ensure it's a directory
-                self.delete_empty_subdirs(subdir)  # Recursively process subdirectories
-                # If the subdirectory is empty after recursion, delete it
-                if not any(subdir.iterdir()):  # Check if it's empty
-                    self.logger.debug(f"  🗑️  DELETING EMPTY SUBDIRECTORY {subdir}")
-                    subdir.rmdir()
+            if subdir.is_dir():
+                self.scan_empty_subdirs(subdir)
+                if not any(subdir.iterdir()):
+                    self.logger.debug(f"  🔍 WOULD DELETE EMPTY SUBDIRECTORY: {subdir}")
 
-    # --------------------------------------------------------------------------- #
-    # Main driver                                                                 #
-    # --------------------------------------------------------------------------- #
     def run(self) -> None:
-        # Step 1: Load patterns
-        project = self.project_dir
         self.load_keep_patterns()
         spec = self.build_pathspec(self.keep_patterns)
 
-        # Step 2: Walk the tree
         all_paths = self.walk_tree()
+        self.logger.debug("Completed directory walk.")
 
-        # Step 3: Classify paths
         matched, non_matched_dirs, non_matched_files, directories_skipped = self.classify_paths(
-            all_paths, project, spec)
+            all_paths, self.project_dir, spec
+        )
 
-        # Step 4: Print the summary
         self.print_summary(matched, non_matched_dirs, non_matched_files)
 
 
 if __name__ == "__main__":
-    MANIFEST_PATH = Path(
-        "/Users/will/Projects/comet-postgen/haraka/utils/manifests/PyFast.yml"
-    )
+    MANIFEST_PATH = Path("/Users/will/Projects/comet-postgen/haraka/utils/manifests/PyFast.yml")
     ROOT_PATH = Path("/Users/will/Projects/junk2/test-template")
 
-    cleaner = ManifestDrivenCleaner(MANIFEST_PATH, ROOT_PATH)
+    cleaner = ManifestDrivenCleaner(
+        manifest_path=MANIFEST_PATH,
+        project_dir=ROOT_PATH,
+        enabled_services=["kafka"]  # ← toggle this list
+    )
     cleaner.run()

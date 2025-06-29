@@ -36,3 +36,6 @@ keep:
 protected:
   - runConfigurations
   - test
+
+services:
+  kafka:
