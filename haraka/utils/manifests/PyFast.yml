@@ -27,6 +27,7 @@ keep:
   - Makefile
   - requirements.txt
   - README.md
+  - docker-compose.yml
 
   # ── IDE / run configs ──────────────────────────────
   - runConfigurations/FastAPI/
@@ -40,16 +41,20 @@ keep:
 protected:
   - src
   - runConfigurations
-  - runConfigurations/FastAPI/FastAPI.run.xml
+  - runConfigurations/FastAPI/FastAPI-Kafka.run.xml
 
 
 services:
   kafka:
-    - docker-compose.kafka.yml
     - runConfigurations/FastAPI/FastAPI-Kafka.run.xml
-    - runConfigurations/FastAPI/MakeBuild.run.xml
+    - runConfigurations/FastAPI/kafka-up.run.xml
     - src/app/api/v1/routers/kafka.py
     - src/app/schemas/kafka.py
     - src/app/services/kafka/
     - src/app/services/kafka/**
+  redis:
+    - runConfigurations/FastAPI/Redis.run.xml
+    - src/app/services/redis/
+    - src/app/services/redis/**
+    - src/app/core/redis_client.py
 
